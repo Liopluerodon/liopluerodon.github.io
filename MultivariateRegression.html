@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Multivariate Regression</title>
+	<meta charset="utf-8">
+</head>
+<body>
+	<input id="startX1" placeholder="x1,1 x1,2 x1,3">
+	<input id="startX2" placeholder="x2,1 x2,2 x2,3">
+	<input id="startX3" placeholder="x3,1 x3,2 x3,3">
+	<input id="startY" placeholder="y1 y2 y3">
+	<input id="startW" placeholder="w1 w2 w3">
+	<input id="startB" placeholder="b">
+	<input id="A" placeholder="a">
+	<input id="Iterations" placeholder="i">
+	<button id="addButt">Add Feature</button>
+	<button id="regressButt">Regress!</button>
+	<script>
+	var regressButt = document.getElementById("regressButt");
+	var adButt = document.getElementById("addButt");
+	var featureCount = 3;
+	var starts = [];
+	var regress = function () {
+		var xt = [];
+		for (var i = 0; i<featureCount; i++) {
+			xt[i] = document.getElementById("startX"+(i+1)).value;
+		}
+		console.log(xt);
+		var ym = document.getElementById("startY").value;
+		var x = [];
+		for (var i = 0; i<xt.length; i++) {
+			x[i] = xt[i].split(" ");
+		}
+		console.log(x);
+		var y = ym.split(" ");
+		var wm = document.getElementById("startW").value;
+		var w = wm.split(" ");
+		var b = parseFloat(document.getElementById("startB").value);
+		var yhat = [];
+		var cost = 0;
+		var a = document.getElementById("A").value;
+		var iterations = document.getElementById("Iterations").value;
+		
+		var yhatText = [];
+		var initCost;
+		var descend = [];
+		var pixels = [];
+		var p = 5;
+		
+		function dot_product(vector1, vector2, k) {
+			let result = 0;
+			for (let i = 0; i < x.length; i++) {
+				result += vector1[i] * vector2[i][k];
+			}
+			return result;
+		}
+
+		// Creates yhat and cost based on starting values of j and w
+		for (var i=0; i<y.length; i++) {
+			yhat[i] = dot_product(w,x,i)+b;
+			yhatText[i,1] = document.createElement("p");
+			yhatText[i,1].textContent = "yhat["+(i+1)+"] = "+yhat[i];
+			yhatText[i,1].style.border = "1px dashed rgb(0,0,0)";
+			yhatText[i,1].style.width = "100px";
+			yhatText[i,1].style.textAlign = "center";
+			document.body.appendChild(yhatText[i,1]);
+			cost = cost + (yhat[i]-y[i])*(yhat[i]-y[i]);
+		}
+
+		cost = cost/(2*y.length);
+		initCost = document.createElement("p");
+		initCost.textContent = "cost = " + cost;
+		initCost.style.border = "1px dashed rgb(0,0,0)";
+		initCost.style.textAlign = "center";
+		initCost.style.width = "100px";
+		document.body.appendChild(initCost);
+
+
+	
+	for (var j = 0; j<iterations; j++) {
+		var sum_w = [];
+		for (var i =0; i<w.length; i++) {
+			sum_w[i] = 0;
+		}
+		var sum_b = 0;
+		var tmp_w = [];
+    
+		for (var k =0; k<x.length; k++) {
+			for (var i=0; i<y.length; i++) {
+				sum_w[k] = sum_w[k]+((dot_product(w,x,i)+b-y[i])*x[k][i]);
+			}
+			tmp_w[k] = w[k]-(a*(sum_w[k])/y.length);
+		}
+		
+		for (var i=0; i<y.length; i++) {
+			sum_b = sum_b+(dot_product(w,x,i)+b-y[i]);
+		}
+		var tmp_b = b-(a*(sum_b)/y.length);
+		
+		for (var k=0; k<x.length; k++) {
+		w[k]=tmp_w[k];
+		}
+		b=tmp_b;
+		
+	descend[j] = document.createElement("p");
+	descend[j].textContent = "w1 = " +w[0]+ ", w2 = " +w[1]+ ", w3 = " +w[2]+ ",  b = " +b;
+	descend[j].style.border = "1px dashed rgb(0,0,0)";
+	descend[j].style.width = "1000px";
+	descend[j].style.position = "absolute";
+	descend[j].style.left = "700px";
+	descend[j].style.top = j*20+100+"px"; 
+	document.body.appendChild(descend[j]);
+
+    //This graphs the learning curve: cost per iteration
+    for (var k=0; k<y.length; k++) {
+    yhat[k] = dot_product(w,x,k)+b;
+    cost = cost + (yhat[k]-y[k])*(yhat[k]-y[k]);
+    }
+
+    cost = cost/(2*y.length);
+    
+    pixels[j,0,5] = document.createElement("p");
+	pixels[j,0,5].style.backgroundColor = "rgb("+cost/p+","+cost/p+","+cost/p+")";
+	pixels[j,0,5].style.width = "2px";
+	pixels[j,0,5].style.height = "2px";
+	pixels[j,0,5].style.padding = "0px 0px 0px 0px";
+	pixels[j,0,5].style.border = "0px ridge rgb(0,0,0)";
+	pixels[j,0,5].style.margin = "0px 0px 0px 0px";
+	pixels[j,0,5].style.position = "absolute";
+	pixels[j,0,5].style.top = 380-cost+"px";
+	pixels[j,0,5].style.left = (370*j/iterations+10)+2000+"px";
+	pixels[j,0,5].style.float = "bottom";
+	document.body.appendChild(pixels[j,0,5]);
+	
+	pixels[0,0,6] = document.createElement("p");
+	pixels[0,0,6].style.backgroundColor = "rgb(0,0,0)";
+	pixels[0,0,6].style.width = "400px";
+	pixels[0,0,6].style.height = "1px";
+	pixels[0,0,6].style.padding = "0px 0px 0px 0px";
+	pixels[0,0,6].style.border = "0px ridge rgb(0,0,0)";
+	pixels[0,0,6].style.margin = "0px 0px 0px 0px";
+	pixels[0,0,6].style.position = "absolute";
+	pixels[0,0,6].style.top = "381px";
+	pixels[0,0,6].style.left = "2000px";
+	pixels[0,0,6].style.float = "bottom";
+	document.body.appendChild(pixels[0,0,6]);
+	}
+
+	pixels[1,0,6] = document.createElement("p");
+	pixels[1,0,6].textContent = "0";
+	pixels[1,0,6].style.position = "absolute";
+	pixels[1,0,6].style.top = "380px";
+	pixels[1,0,6].style.left = "2000px";
+	pixels[1,0,6].style.float = "bottom";
+	document.body.appendChild(pixels[1,0,6]);
+	
+	pixels[2,0,6] = document.createElement("p");
+	pixels[2,0,6].textContent = iterations;
+	pixels[2,0,6].style.position = "absolute";
+	pixels[2,0,6].style.top = "380px";
+	pixels[2,0,6].style.left = "2400px";
+	pixels[2,0,6].style.float = "bottom";
+	document.body.appendChild(pixels[2,0,6]);
+
+	cost=0;
+
+	for (var i=0; i<y.length; i++) {
+		yhat[i] = dot_product(w,x,i)+b;
+		yhatText[i,2] = document.createElement("p");
+		yhatText[i,2].textContent = "New yhat["+(i+1)+"] = "+yhat[i];
+		yhatText[i,2].style.border = "1px dashed rgb(0,0,0)";
+		yhatText[i,2].style.width = "300px";
+		yhatText[i,2].style.textAlign = "center";
+		document.body.appendChild(yhatText[i,2]);
+		cost = cost + (yhat[i]-y[i])*(yhat[i]-y[i]);
+	}
+
+cost = cost/(2*y.length);
+yhatText[0,3] = document.createElement("p");
+yhatText[0,3].textContent = "cost = " + cost;
+yhatText[0,3].style.border = "1px dashed rgb(0,0,0)";
+yhatText[0,3].style.width = "300px";
+yhatText[0,3].style.textAlign = "center";
+document.body.appendChild(yhatText[0,3]);
+
+for (var i = 0; i<w.length; i++) {
+	yhatText[0,i+4] = document.createElement("p");
+	yhatText[0,i+4].textContent = "w["+(i+1)+"] = "+w[i];
+	yhatText[0,i+4].style.border = "1px dashed rgb(0,0,0)";
+	yhatText[0,i+4].style.width = "400px";
+	yhatText[0,i+4].style.textAlign = "center";
+	document.body.appendChild(yhatText[0,i+4]);
+}
+	yhatText[0,40] = document.createElement("p");
+	yhatText[0,40].textContent = "b = "+b;
+	yhatText[0,40].style.border = "1px dashed rgb(0,0,0)";
+	yhatText[0,40].style.width = "400px";
+	yhatText[0,40].style.textAlign = "center";
+	document.body.appendChild(yhatText[0,40]);
+}
+	
+	var addFeature = function () {
+		featureCount++;
+		starts[featureCount] = document.createElement("input");
+		starts[featureCount].id = "startX"+featureCount;
+		starts[featureCount].placeholder = "x"+featureCount+",1";
+		document.body.appendChild(starts[featureCount]);
+	}
+	regressButt.addEventListener("click", regress);
+	addButt.addEventListener("click", addFeature);
+/* to generalize feature count: 
+	make things that depend on feature count depend on feauture count
+	make the for loops work by creating a global variable that is attached to each text box's id and goes up when a new box is made
+*/
+	
+	</script>
+</body>
+</html>
