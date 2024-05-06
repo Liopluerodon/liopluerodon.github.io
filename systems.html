@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Systems of Equations</title>
+	<link rel="icon" href="Systems_Icon.png">
+	<style>
+		
+	</style>
+</head>
+<body>
+	<h1>SYSTEM OF EQUATIONS solver</h1>
+	<p>ax</p><input id="InputA1">
+	<p>by</p><input id="InputB1">
+	<p>=c</p><input id="InputC1"><br>
+	<p>ax</p><input id="InputA2">
+	<p>by</p><input id="InputB2">
+	<p>=c</p><input id="InputC2"><br><br>
+	<button id="Solve">Solve</button>
+	<button id="SolveBy">Elimination</button>
+<script>
+	var solve = document.getElementById("Solve");
+	var method = document.getElementById("SolveBy");
+	var elim = true;
+	var i=1;
+
+	var solveFunc = function () {
+	var a1 = document.getElementById("InputA1").value;
+	var b1 = document.getElementById("InputB1").value;
+	var c1 = document.getElementById("InputC1").value;
+	var a2 = document.getElementById("InputA2").value;
+	var b2 = document.getElementById("InputB2").value;
+	var c2 = document.getElementById("InputC2").value;
+	var integerchecker = function (integer) {
+		if (Math.round(integer*Math.pow(10,0))/Math.pow(10,0) == integer) {return true;}
+		else {return false;}
+		}
+	var fraction = function (decimal) {
+		if (integerchecker(decimal) === true) {return decimal;}
+		else {
+			var denom;
+			for (k=2; k<100; k++) {
+			if (integerchecker(k*decimal) === true) {
+				denom = k;
+				break;
+			}
+			}
+		return "(" + (denom*decimal) + "/" + denom + ")";
+		}
+		};
+	
+	if (elim === true) {
+		console.log("Elimination");
+		
+		
+	}
+		if (elim === false) {
+		console.log("Substitution");
+		var step = [];
+		for (var j=0; j < 11; j++) {
+			step[j] = document.createElement("p");
+			step[j].id = "step" + j + "." + i;
+			step[j].className = "step" + j;
+			document.body.appendChild(step[j]);	
+		}
+		
+		step[0].textContent = a1 + "x + " + b1 + "y = " + c1 +"  and  " +  a2 + "x + " + b2 + "y = " + c2;
+		
+		step[1].textContent = a1 + "x = " + -b1 + "y + " + c1;
+		var xsubycoeff = -b1/a1;
+		var xsubconstant = c1/a1;
+		step[2].textContent = "x = " + fraction(xsubycoeff) + "y + " + fraction(xsubconstant);
+		
+		step[3].textContent = a2 + "*(" + fraction(xsubycoeff) + "y + " + fraction(xsubconstant) + ") + " + b2 + "y = " + c2;
+		
+		var newyCoeff = a2*xsubycoeff;
+		var newyConst = a2*xsubconstant;
+		step[4].textContent = fraction(newyCoeff)+ "y + " + fraction(newyConst) + " + " + b2 + "y = " + c2;
+	
+		var finalYcoeff = newyCoeff - -b2;
+		var finalConstant = c2 - newyConst;
+		step[5].textContent = fraction(finalYcoeff) + "y = " + fraction(finalConstant);
+		
+		var yVal = finalConstant/finalYcoeff;
+		step[6].textContent = "y = " + fraction(yVal);
+		
+		step[7].textContent = a1 + "x + " + b1 + "*" + fraction(yVal) + " = " + c1;
+		
+		step[8].textContent = a1 + "x = " + fraction(c1 - (b1*yVal));
+		
+		var xVal = (c1 - (b1*yVal))/a1;
+		step[9].textContent = "x = " + fraction(xVal);
+		
+		step[10].textContent = "(" + fraction(xVal) + "," + fraction(yVal) + ")";
+		
+		step[11].textContent = "---------------------------------------";
+		
+	}
+	i=i+1;
+	};
+	
+	var methodSwitch = function () {
+		if (elim === false) {
+			method.textContent = "Elimination";
+			elim = true;
+		}
+							
+		else {
+			method.textContent = "Substitution";
+			elim = false;
+		}
+	};
+	solve.addEventListener("click",solveFunc);
+	method.addEventListener("click",methodSwitch);
+</script>
+</body>
+</html>

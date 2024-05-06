@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Polynomial Regression</title>
+	<link rel="icon" href="Polyreg_Icon.png">
+	<meta charset="utf-8">
+	<style type="text/css">
+		.point{
+			position:absolute;
+			margin: 0px 0px 0px 0px;
+			padding: 0px 0px 0px 0px;
+			float: bottom;
+			width: 2px;
+			height: 2px;
+			border: 0px;
+		}
+		.box{
+			border: 1px dashed rgb(0,0,0);
+			width: 350px;
+			textAlign: center;
+			padding: 4px;
+		}
+	</style>
+</head>
+<body>
+	<input id="startX1" placeholder="x1 x2 x3">
+	<input id="startY" placeholder="y1 y2 y3">
+	<input id="degree" placeholder="degree">
+	<input id="iter" placeholder="iterations">
+	<button id="regressButt" onClick="regress()">Regress!</button>
+	<script>
+	var regress = function () {
+		var xt = document.getElementById("startX1").value;
+		var ym = document.getElementById("startY").value;
+		var x = xt.split(" ");
+		var y = ym.split(" ");
+		for (let i = 0; i<x.length; i++) {
+			x[i] = Number(x[i]);
+			y[i] = Number(y[i]);
+		}
+		var degree = Number(document.getElementById("degree").value);
+
+		function textBox(content) {
+			let tmp = document.createElement("p");
+			tmp.className="box";
+			tmp.textContent = content;
+			document.body.appendChild(tmp);
+		}
+
+		function graph(x, y, left, height, color = "black") {
+		let pixels = [];
+		pixels[x] = document.createElement("p");
+		pixels[x].style.backgroundColor = color;
+		pixels[x].className = "point";
+		pixels[x].style.top = height-y+"px";
+		pixels[x].style.left = x+left+"px";
+		document.body.appendChild(pixels[x]);}
+
+		function rounding(roundee, r) {return Math.round(roundee*Math.pow(10,r))/Math.pow(10,r);};
+
+		function regress(x, y, p) {
+			var w = [];
+			var b = 0;
+			var cost = 0;
+			var a = 0.1;
+			var iterations = Number(document.getElementById("iter").value);
+			var threshold = 0.00001; //What's the most cost you're willing to tolerate
+
+			for (let i = 0; i<p; i++) {w[i]=0;}
+			
+			function dot_product(vect, k, c) {
+				let sum = 0;
+				for (let i = 0; i<w.length; i++) {sum += vect[i]*x[k]**(i+1);}
+				return sum+c;
+			}
+
+			function calcCost(vect1, vect2) {
+				cost=0;
+				for (let i=0; i<y.length; i++) {cost += (dot_product(vect1,i,vect2)-y[i])**2;}	
+				return cost/(2*y.length);}
+
+
+			function descend(newW, newB, length, reg = false) {
+				let scale = 1;
+				for (let j = 0; j < length; j++) {
+					let sumW = [];
+					for (let i = 0; i<p; i++) {sumW[i]=0;}
+					let sumB = 0;
+
+					for (let k=0; k<p; k++) {
+						for (let i=0; i<y.length; i++) {sumW[k]+=(dot_product(newW,i,newB)-y[i])*x[i]**(k+1);}
+					}
+					for (let i=0; i<y.length; i++) {sumB += dot_product(newW,i,newB)-y[i];}
+
+					if (reg && length<50000) {
+						if (calcCost(newW, newB)*scale<20) {scale *= 10;}
+						graph(j, calcCost(newW, newB)*scale, 500, 400);
+						graph(j, 0, 500, 400);
+					}
+
+					for (let i = 0; i<p; i++) {newW[i] += -a*sumW[i]/y.length;}
+					newB += -a*sumB/y.length;
+					b=newB;
+
+					if (calcCost(newW, newB)<threshold && reg) {break;}
+				} 
+			}
+
+
+			let startCost = calcCost(w, b);
+			let optimalA = false;
+			
+			while (optimalA == false) {
+				var A_W = [];
+				var A_B = 0;
+				for (let i = 0; i<p; i++) {A_W[i]=0;}
+				descend(A_W, A_B, 10);
+				if (calcCost(A_W, A_B)>startCost) {a=a/(10**(1/6));}
+				if (calcCost(A_W, A_B)<startCost) {optimalA=true;}
+			}
+
+
+			descend(w, b, iterations, true);
+			textBox("Cost = "+calcCost(w,b))
+			let output = [b];
+			for (let i = 1; i<=p; i++) {output[i]=w[i-1];}
+			return output;
+		}
+
+		let output = regress(x, y, degree);
+
+		function calculate(n) {
+			let tmp = 0;
+			for (let j = 0; j<output.length; j++) {
+				tmp += (n**j)*output[j];
+			}
+			return tmp;
+		}
+
+		function text(z, d) {
+		let sum = rounding(z[0],d);
+		if (z[1]) {sum += " + "+rounding(z[1],d)+"x";}
+		if (z[2]) {sum += " + "+rounding(z[2],d)+"x²";}
+		if (z[3]) {sum += " + "+rounding(z[3],d)+"x³";}
+		if (z[4]) {sum += " + "+rounding(z[4],d)+"x⁴";}
+		if (z[5]) {sum += " + "+rounding(z[5],d)+"x⁵";}
+		if (z[6]) {sum += " + "+rounding(z[6],d)+"x⁶";}
+		if (z[7]) {sum += " + "+rounding(z[7],d)+"x⁷";}
+		return sum;
+		}
+
+		textBox(text(output, output.length)+" = y");
+
+		for (let i = 0; i<x.length; i++) {textBox(`yhat[${i}] = ${calculate(x[i])}`);}
+
+		let maxX = x[0];
+		let minX = x[0];
+		for (let element of x) {
+			if (element>maxX) {maxX=element;}
+			if (element<minX) {minX=element;}
+		}
+
+		let maxY = y[0];
+		let minY = y[0];
+		for (let element of y) {
+			if (element>maxY) {maxY=element;}
+			if (element<minY) {minY=element;}
+		}
+
+		let lowerbound = minX-5;
+		let upperbound = maxX+5;
+		let increment = 200/(upperbound-lowerbound);
+		let scale = 10;
+
+		for (let i = 0; i<200; i++) {
+			let val = lowerbound+i/increment;
+			if (calculate(val)>(minY-5) && calculate(val)<(maxY+5)) {
+				graph(i, scale*calculate(val), 100, 580, "black");
+			}
+
+			graph(i, 0, 100, 580, "black");
+
+			for (let j = 0; j<x.length; j++) {
+				if (Math.abs(val-x[j])<0.1) {graph(i, scale*y[j], 100, 580, "red");}
+			}
+		}
+
+		textBox("Information about below graph of polynomial:");
+		textBox(`Graph Domain: [${lowerbound}, ${upperbound}]`);
+		textBox(`Graph Range: [${minY-5}, ${maxY+5}],  Vertical Scale = ${scale}`);
+
+
+	}
+</script>
+</body>
+</html>

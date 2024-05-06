@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Gravisim Issues</title>
+	<style type="text/css">
+		body{background-color:black;}
+		.particle{
+			border-radius: 100%;
+			width: 20px;
+			height: 20px;
+			position: absolute;
+		}
+		.pixels{
+			width: 2px;
+			height: 2px;
+			pading: 0px 0px 0px 0px;
+			margin: 0px 0px 0px 0px;
+			float: bottom;
+			position: absolute;
+			border: 0px;}
+		#anchor{
+			box-shadow: 0 0 20px 1px white;
+			background-color: white;
+			top: 250px;
+			left: 500px;
+		}
+		#subject{
+			box-shadow: 0 0 20px 1px red;
+			background-color: red;
+			top: 250px;
+		}
+		#conclusion{
+			color: white;
+		}
+	</style>
+</head>
+<body>
+	<text id="conclusion">So it seems that gravity cannot be simulated with 100% accuracy using this method</text><br>
+	<text id="conclusion">Indeed, the graph of position of this ball should produce something like a sine wave with semicircles, whose derivative and 2nd derivative (v and a) have asymptotes</text><br>
+	<text id="conclusion">Dulling these asymptotes using band-aids like softeners increases innaccuracy</text><br>
+	<text id="conclusion">On the corresponding kinetic energy, the effect can be seen with spikes that pop upward and straight lines capping the spikes</text><br>
+	<text id="conclusion">If the mathematically optimal / physically accurate trajectory was followed, the motion would be perfectly cyclical, but alas its impossible to trully make it cyclical without neutering accuracy</text><br>
+	<p class="particle" id="anchor"></p>
+	<p class="particle" id="subject"></p>
+	<script type="text/javascript">
+		let bod = {
+			pos: Number(prompt("Starting position of ball")),
+			v: Number(prompt("Starting velocity of ball")),
+			a: 0
+		}
+		let formula = Number(prompt("Select your formula: 1-Accurate, 2-Softener, 3-No Accel"));
+		let secondaryNumber;
+		if (formula == 2) {
+			secondaryNumber=Number(prompt("What should the softener be?"))
+		}
+		if (formula == 3) {
+			secondaryNumber=Number(prompt("From what distance should acceleration be 0?"))
+		}
+
+		let el = document.getElementById("subject");
+		el.style.left = bod.pos+500+"px";
+		let iter = 0;
+
+		function graph(x, y, left, height, color = "white") {
+		let pixels = [];
+		pixels[x] = document.createElement("p");
+		pixels[x].style.backgroundColor = color;
+		pixels[x].className = "pixels"
+		pixels[x].style.top = height-y+"px";
+		pixels[x].style.left = x+left+"px";
+		document.body.appendChild(pixels[x]);}
+
+
+		function running() {
+			iter++;
+
+			if (formula == 1) {
+				bod.a = -Math.sign(bod.pos)*100/(bod.pos**2);
+				graph(iter, bod.pos, 0, 500);
+			}
+
+			if (formula == 2) {
+				bod.a = -Math.sign(bod.pos)*100/(secondaryNumber**2+bod.pos**2);
+				graph(iter, bod.pos, 0, 500);
+			}
+
+			if (formula == 3) {
+				if (Math.abs(bod.pos)>secondaryNumber) {
+					bod.a = -Math.sign(bod.pos)*100/(bod.pos**2);
+					graph(iter, bod.pos, 0, 500);
+				}
+				else {
+					bod.a = 0; 
+					graph(iter, bod.pos, 0, 500, "red");
+				}
+			}
+
+			let tmp = bod.v
+			bod.v += bod.a;
+			bod.pos += tmp;
+			el.style.left = bod.pos+500+"px";
+			bod.a = 0;
+		}
+
+		let run = setInterval(running, 10);
+	</script>
+</body>
+</html>

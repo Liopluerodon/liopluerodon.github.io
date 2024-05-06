@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" href="Conics_Icon.png">
+	<title>Conics</title>
+	<style>
+		body{background-color: rgb(80,80,80);}
+		p{
+			position: absolute;
+			background-color: rgb(200,200,200);
+			color: rgb(50,50,50);
+		}
+		.point{
+			width: 2px;
+			height: 2px;
+		}
+		.pixels{
+			width: 2px;
+			height: 2px;
+			pading: 0px 0px 0px 0px;
+			margin: 0px 0px 0px 0px;
+			float: bottom;
+			position: absolute;
+			border: 0px;
+		}
+		.button{
+			width: 40px;
+		}
+		.tick{
+			left: 0px;
+		}
+		#start{
+			position: absolute;
+			top: 200px;
+		}
+	</style>
+</head>
+<body>
+	<h2 id="function">Ax²+Bxy+Cy²+Dx+Ey+F=0</h2>
+	<input class="button" id="A" placeholder="A">
+	<input class="button" id="B" placeholder="B">
+	<input class="button" id="C" placeholder="C">
+	<input class="button" id="D" placeholder="D">
+	<input class="button" id="E" placeholder="E">
+	<input class="button" id="F" placeholder="F">
+	<br>
+	<input class="tick" id="rotate" type="checkbox">
+	<label>Rotate Conic</label>
+	<br>
+	<input class="tick" id="calc" type="checkbox">
+	<label>Add Important Points to Conic</label>
+	<br>
+	<p>The 2nd must only be ticked if B=0 or the 1st is <br> ticked, because it will only apply to an aligned <br> conic. You can't rotate a conic where B=0 already. </p>
+	<br>
+	<button id="start" onClick="play()">Graph</button>
+	<br><br><br><br><br>
+	<p id="baseConic"></p><br>
+	<p id="angleRotation"></p><br>
+	<p id="rotatedConic"></p><br>
+	<p id="center"></p><br>
+	<p id="horizontal"></p><br>
+	<p id="vertical"></p><br>
+	<script>
+		let domain = 10;
+		let range = 10;
+		//Scale is how much space an integer takes up (a scale of 1 means y=2 is one pixel wide)
+		let domainScale = 24;
+		let rangeScale = 24;
+		//Axes is the the numerical (not spatial) gap between axes
+		let domainAxes = 1;
+		let rangeAxes = 1;
+		//For now, make sure the domain axes is a factor of the domain, and same with range
+		let origin = [600,300];
+
+		function line(horizontal, offset, start, end, thickness) {
+			let temp = document.createElement("p");
+			if (!horizontal) {
+				temp.style.left = offset*domainScale+origin[0]+"px";
+				temp.style.top = origin[1]-start*rangeScale+"px";
+				temp.style.width = thickness+"px";
+				temp.style.height = Math.abs((origin[1]-end*rangeScale)-(origin[1]-start*rangeScale))+"px";
+			}	
+			if (horizontal) {
+				temp.style.left = origin[0]+start*domainScale+"px";
+				temp.style.top = origin[1]-offset*rangeScale+"px";
+				temp.style.width = (end-start)*domainScale+"px";
+				temp.style.height = thickness+"px";
+			}
+			document.body.appendChild(temp);}
+
+		function graph(x, y, left, height, color = "white") {
+		let pixels = [];
+		pixels[x] = document.createElement("p");
+		pixels[x].style.backgroundColor = color;
+		pixels[x].className = "pixels"
+		pixels[x].style.top = height-y+"px";
+		pixels[x].style.left = x+left+"px";
+		document.body.appendChild(pixels[x]);}
+
+		function point(x,y, color="black") {
+			let temp = document.createElement("p");
+			temp.className = "point";
+			temp.style.left = origin[0]+x*domainScale+"px";
+			temp.style.top = origin[1]-y*rangeScale+"px";
+			temp.style.backgroundColor = color;
+			document.body.appendChild(temp);}
+
+		function bigPoint(x,y, color="black") {
+			let temp = document.createElement("p");
+			temp.className = "point";
+			temp.style.width = "4px";
+			temp.style.height = "4px";
+			temp.style.left = origin[0]+x*domainScale-2+"px";
+			temp.style.top = origin[1]-y*rangeScale-2+"px";
+			temp.style.backgroundColor = color;
+			document.body.appendChild(temp);}
+
+		function text(texts, left, top) {
+			let temp = document.createElement("p");
+			temp.textContent = texts;
+			temp.style.top = top+"px";
+			temp.style.left = left+"px";
+			document.body.appendChild(temp);}
+
+		line(false, 0, range, -range, 2);
+		line(true, 0, -domain, domain, 2);
+
+		for (let i = -domain; i <= domain; i+=domainAxes) {line(false, i, range, -range, 1);}
+
+		for (let i = -range; i <= range; i+=rangeAxes) {line(true, i, -domain, domain, 1);}
+
+		text(". "+range+" .", origin[0]-16, origin[1]-range*rangeScale-20);
+		text(". "+-range+" .", origin[0]-16, origin[1]+range*rangeScale+5);
+		text(". "+domain+" .", origin[0]+domain*domainScale+5, origin[1]-5);
+		text(". "+-domain+" .", origin[0]-domain*domainScale-55, origin[1]-5);
+
+		function rounding(roundee, r) {return Math.round(roundee*Math.pow(10,r))/Math.pow(10,r);}
+
+		function getAngle(A, B, C, D, E, F) {
+			if (B!=0) {return (Math.PI/2 - Math.atan((A-C)/B))/2;}
+			else {return 0;}}
+
+		function rotateConic(A, B, C, D, E, F, angle) {
+			let sin = Math.sin(angle);
+			let cos = Math.cos(angle);
+			let doublesin = Math.sin(2*angle);
+			let doublecos = Math.cos(2*angle);
+			console.log("Conic is rotated by "+angle);
+			return [A*cos**2+B*cos*sin+C*sin**2,C*doublesin+B*doublecos-A*doublesin,A*sin**2-B*cos*sin+C*cos**2, D*cos+E*sin, E*cos-D*sin, F];}
+
+		function computeConic(A, B, C, D, E, F, x, y) {return A*x**2+B*x*y+C*y**2+D*x+E*y+F;}
+
+		function graphConic(conic, increment, accuracy, color) {
+			for (let x = -domain; x<domain; x+=increment) {
+				for (let y = -range; y<range; y+=increment) {
+					if (Math.abs(computeConic(...conic, x, y))<accuracy) {point(x, y, color); }
+				}
+			}}
+
+		function calcConic(A, B, C, D, E, F, color1, color2, color3, color4, r) {
+			let center = [-D/(2*A), -E/(2*C)];
+			bigPoint(center[0], center[1], color1);
+			document.getElementById("center").textContent = "Center: ("+rounding(center[0], r)+", "+rounding(center[1], r)+")";
+			let a = Math.sqrt(Math.abs((D**2/(4*A)+E**2/(4*C)-F)/A));
+			let b = Math.sqrt(Math.abs((D**2/(4*A)+E**2/(4*C)-F)/C));
+			document.getElementById("horizontal").textContent = "Horizontal Axis = "+rounding(2*a,r);
+			document.getElementById("vertical").textContent = "Vertical Axis = "+rounding(2*b,r);
+			bigPoint(center[0]+a, center[1], color2);
+			bigPoint(center[0]-a, center[1], color2);
+			bigPoint(center[0], center[1]+b, color2);
+			bigPoint(center[0], center[1]-b, color2);
+
+			if (-4*A*C>0) {
+			for (let i=-domain; i<domain; i+=0.2) {
+				point(i, center[1]+b/a*(i-center[0]), color3);
+				point(i, center[1]-b/a*(i-center[0]), color3);
+			}}
+
+			if (-4*A*C<0) {
+				if (a>b) {
+				let c = Math.sqrt(a**2-b**2);
+				bigPoint(center[0]+c, center[1], color4);
+				bigPoint(center[0]-c, center[1], color4);
+				console.log("Focii: ("+(center[0]+c)+", "+center[1]+"), ("+(center[0]-c)+", "+center[1]+")");
+				}
+				if (b>a) {
+				let c = Math.sqrt(b**2-a**2);
+				bigPoint(center[0], center[1]+c, color4);
+				bigPoint(center[0], center[1]-c, color4);
+				console.log("Focii: ("+center[0]+", "+(center[1]+c)+"), ("+center[0]+", "+(center[1]-c)+")");
+				}
+			}
+
+			if (-4*A*C>0) {
+				if (Math.sign((D**2/(4*A)+E**2/(4*C)-F)/A)==1) {
+				let c = Math.sqrt(a**2+b**2);
+				bigPoint(center[0]+c, center[1], color4);
+				bigPoint(center[0]-c, center[1], color4);
+				console.log("Focii: ("+(center[0]+c)+", "+center[1]+"), ("+(center[0]-c)+", "+center[1]+")");
+				}
+				if (Math.sign((D**2/(4*A)+E**2/(4*C)-F)/A)==-1) {
+				let c = Math.sqrt(b**2+a**2);
+				bigPoint(center[0], center[1]+c, color4);
+				bigPoint(center[0], center[1]-c, color4);
+				console.log("Focii: ("+center[0]+", "+(center[1]+c)+"), ("+center[0]+", "+(center[1]-c)+")");
+				}
+			}}
+
+		function printConic(A, B, C, D, E, F, r) {
+			return (rounding(A,r)+"x² + "+rounding(B,r)+"xy + "+rounding(C,r)+"y² + "+rounding(D,r)+"x + "+rounding(E,r)+"y + "+rounding(F,r)+" = 0");}
+
+		function play() {
+			A=Number(document.getElementById("A").value);
+			B=Number(document.getElementById("B").value);
+			C=Number(document.getElementById("C").value);
+			D=Number(document.getElementById("D").value);
+			E=Number(document.getElementById("E").value);
+			F=Number(document.getElementById("F").value);
+
+			calc = document.getElementById("calc").checked;
+			rotate = (document.getElementById("rotate").checked && B!=0);
+
+			let conic = [A, B, C, D, E, F];
+			let rotatedConic;
+
+			if (rotate) {rotatedConic = rotateConic(...conic, getAngle(...conic));}
+			//let customrotatedConic = rotateConic(...conic, 0.1);
+
+			graphConic(conic, 0.02, 0.5, "blue");
+			if (rotate) {graphConic(rotatedConic, 0.02, 0.5, "red");}
+			//graphConic(customrotatedConic, 0.02, 0.5, "green");
+
+			document.getElementById("baseConic").textContent = printConic(...conic, 3);
+			if(rotate) {
+				document.getElementById("rotatedConic").textContent = printConic(...rotatedConic, 3);
+				document.getElementById("angleRotation").textContent = "Rotate Conic by "+getAngle(...conic);
+			}
+
+			if (calc && conic[1]==0) {calcConic(...conic, "blue", "red", "lime", "pink", 3);}
+			if (calc && rotate) {calcConic(...rotatedConic, "red", "blue", "lime", "pink", 3);}
+		}
+	</script>
+</body>
+</html>

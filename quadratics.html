@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Quadratics</title>
+	<link rel="icon" href="Quadratic_Icon.png">
+	<style>
+		.equations{
+			background-color:rgb(255,188,0);
+			border:3px ridge rgb(255,154,0);
+			width:25%;
+			overflow-x: visible;
+			text-align: center;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>The Quadratic Solver</h1>
+	<h2>Input a positive integer in the first space, and any number for the others</h2>
+	<p>Round to</p><input id="InputR">
+	<p>ax²</p><input id="InputA">
+	<p>bx</p><input id="InputB">
+	<p>c</p><input id="InputC"><br>
+	<button id="Solve" onClick="quadratic()">Solve</button>
+	<button id="ToggleSignage" onClick="toggleSignFunc()">Subtract Positives</button>
+	<button id="ToggleSqrt" onClick="toggleSqrtFunc()">Approximate Form</button>
+	
+<script>
+var solve = document.getElementById("Solve");
+var toggleSign = document.getElementById("ToggleSignage");
+var toggleSqr = document.getElementById("ToggleSqrt");
+var subtract = 1;
+var exact = false;
+
+var i = 1;
+
+var quadratic = function () {
+	var r = document.getElementById("InputR").value;
+	var a = document.getElementById("InputA").value;
+	var b = document.getElementById("InputB").value;
+	var c = document.getElementById("InputC").value;
+	var det = (b*b)-(4*a*c);
+	var sqrtdet = "sqrt("+det+")";
+	var detissquare = false;
+	var squarefactorsofdet = [];
+	var dethassquarefactors = false;
+	var sqrtcoeff;
+	var firsthalf;
+	var otherhalf;
+	var rounding = function (roundee) {return Math.round(roundee*Math.pow(10,r))/Math.pow(10,r);};
+	var integerchecker = function (integer) {
+		if (Math.round(integer*Math.pow(10,0))/Math.pow(10,0) == integer) {
+		return true;
+		}
+		else {return false;}
+	}
+	var gcd = function(a, b) {
+	if (!b) return a;
+	return gcd(b, a % b);};
+	
+	var tempSpace = document.createElement("h2");
+	tempSpace.id = "equation" + i;
+	tempSpace.className = "equations";
+	
+	var sol1Space = document.createElement("p");
+	sol1Space.id = "solution1." + i;
+	sol1Space.className = "solutionones";
+	
+	var sol2Space = document.createElement("p");
+	sol2Space.id = "solution2." + i;
+	sol2Space.className = "solutiontwos";
+	
+	var numbSpace = document.createElement("h3");
+	numbSpace.id = "numbermark" + i;
+	numbSpace.className = "numbermarks";
+	
+	if (exact === false) {
+	sol1Space.style.border = "1.5px dashed rgb(0,0,0)";
+	sol1Space.style.textAlign = "center";
+	sol1Space.style.width = "17%";
+	sol1Space.style.marginLeft = "4%";
+	
+	sol2Space.style.border = "1.5px dashed rgb(0,0,0)";
+	sol2Space.style.textAlign = "center";
+	sol2Space.style.width = "17%";
+	sol2Space.style.marginLeft = "4%";
+	}
+	
+	if (exact === true) {
+	sol1Space.style.border = "1.5px dashed rgb(0,0,0)";
+	sol1Space.style.textAlign = "center";
+	sol1Space.style.width = "20%";
+	sol1Space.style.marginLeft = "2.5%";
+	
+	sol2Space.style.border = "1.5px dashed rgb(0,0,0)";
+	sol2Space.style.textAlign = "center";
+	sol2Space.style.width = "20%";
+	sol2Space.style.marginLeft = "2.5%";
+	}
+
+    var showA = a+"x²";
+    var showB = b+"x";
+    var showC = c;
+    var connectOne = " + ";
+    var connectTwo = " + ";
+    var solution1 = ((-b+Math.sqrt(b*b-4*a*c))/(2*a));
+    var solution2 = ((-b-Math.sqrt(b*b-4*a*c))/(2*a));
+    document.body.appendChild(numbSpace);
+    document.body.appendChild(tempSpace);
+    document.body.appendChild(sol1Space);
+    document.body.appendChild(sol2Space);
+    console.log("x = " + rounding(solution2)+" and x = " + rounding(solution1));
+    
+    if (exact===false) {
+		if (rounding(solution1)==solution1) {
+		sol1Space.textContent = "x = " + rounding(solution1);
+		}
+		if (rounding(solution1)!=solution1) {
+		sol1Space.textContent = "x ≈ " + rounding(solution1);	
+		}
+		if (rounding(solution2)==solution2) {
+		sol2Space.textContent = "x = " + rounding(solution2);
+		}
+		if (rounding(solution2)!=solution2) {
+		sol2Space.textContent = "x ≈ " + rounding(solution2);	
+		}
+	if (det<0) {
+		solution1 = [-b/(2*a),Math.abs(Math.sqrt(Math.abs(b*b-4*a*c))/(2*a))];
+		solution2 = [-b/(2*a),Math.abs(Math.sqrt(Math.abs(b*b-4*a*c))/(2*a))];
+		console.log(solution1[0]+"+"+solution1[1]+", "+solution2[0]+"-"+solution2[1]);
+		if (solution2[0] == rounding(solution2[0]) && solution2[1] == rounding(solution2[1])) {
+			sol2Space.textContent = "x = " + rounding(solution2[0]) + "-" + rounding(solution2[1]) + "i";
+		}
+		if (solution2[0] != rounding(solution2[0]) || solution2[1] != rounding(solution2[1])) {
+			sol2Space.textContent = "x ≈ " + rounding(solution2[0]) + "-" + rounding(solution2[1]) + "i";
+		}
+		if (solution1[0] == rounding(solution1[0]) && solution1[1] == rounding(solution1[1])) {
+			sol1Space.textContent = "x = " + rounding(solution1[0]) + "+" + rounding(solution1[1]) + "i";
+		}
+		if (solution1[0] != rounding(solution1[0]) || solution1[1] != rounding(solution1[1])) {
+			sol1Space.textContent = "x ≈ " + rounding(solution1[0]) + "+" + rounding(solution1[1]) + "i";
+		}
+		}
+	};
+	
+	if (det<0) {sqrtdet = "i*sqrt("+Math.abs(det)+")";}
+	for (var fo = 1; fo < 100; fo++) {
+		if (Math.abs(det)==fo*fo) {
+			sqrtdet = fo;
+			if (det<0) {
+				sqrtdet = fo+"i";
+			}
+		detissquare = true;
+		}
+	}
+	if (!detissquare) {
+	var factorcount = 0;
+		for (var factor = 2; factor < 100; factor++) {
+			if (integerchecker(det/(factor*factor)) === true && (det/(factor*factor)) != 0) {
+			squarefactorsofdet[factorcount] = factor*factor;
+			console.log(factorcount+":"+squarefactorsofdet[factorcount]);
+			dethassquarefactors = true;
+			}
+		}
+	}
+	if (dethassquarefactors) {
+	sqrtcoeff = Math.sqrt(squarefactorsofdet[squarefactorsofdet.length-1]);
+		if (det>0) {sqrtdet = sqrtcoeff/gcd(sqrtcoeff,2*a)+"*sqrt("+Math.abs(det)/squarefactorsofdet[squarefactorsofdet.length-1]+")";}
+		if (det<0) {sqrtdet = "i*"+sqrtcoeff/gcd(sqrtcoeff,2*a)+"sqrt("+Math.abs(det)/squarefactorsofdet[squarefactorsofdet.length-1]+")";}
+	if (sqrtcoeff/gcd(sqrtcoeff,2*a)==1) {
+		if (det>0) {sqrtdet = "sqrt("+Math.abs(det)/squarefactorsofdet[squarefactorsofdet.length-1]+")";}
+		if (det<0) {sqrtdet = "i*sqrt("+Math.abs(det)/squarefactorsofdet[squarefactorsofdet.length-1]+")";}
+		}
+	otherhalf = sqrtdet+"/"+((2*a)/gcd(sqrtcoeff,2*a));
+	}
+	
+	if (!dethassquarefactors && !detissquare) {otherhalf = sqrtdet + "/" + (2*a);}
+	
+	if (detissquare) {
+		if (det>0) {otherhalf = (sqrtdet/gcd(sqrtdet,2*a))+"/"+((2*a)/gcd(sqrtdet,2*a));}
+		if (det<0) {otherhalf = "i"+(sqrtdet/gcd(sqrtdet,2*a))+"/"+((2*a)/gcd(sqrtdet,2*a));}
+	}
+	
+	if (integerchecker(-b) === true && integerchecker(2*a) === true) {firsthalf = (-b/gcd(-b,2*a))+"/"+((2*a)/gcd(-b,2*a));}
+	else {firsthalf = (-b+"/"+(2*a));}
+	
+	if (exact===true) {
+		if (b!=0 && det!=0) {
+		sol1Space.textContent = "x = (" + firsthalf + ") + " + otherhalf;
+		sol2Space.textContent = "x = (" + firsthalf + ") - " + otherhalf;
+		}
+		if (b==0 && det!=0) {
+		sol1Space.textContent = "x = " + otherhalf;
+		sol2Space.textContent = "x = -" + otherhalf;
+		}
+		if (b!=0 && det==0) {
+		sol1Space.textContent = "x = " + firsthalf;
+		sol2Space.textContent = "x = " + firsthalf;
+		}
+	};
+	
+    if (subtract!=0) {
+    if (a==1) {showA = "x²";}
+    if (a==-1) {showA = "-x²";}
+    if (a==0) {
+        showA = "";
+        connectOne= "";
+    }
+    if (b==1) {showB = "x";}
+    if (b==-1) {showB = "-x";}
+    if (b==0) {
+        showB = "";
+        connectOne = "";
+    }
+    
+    if (c==0) {
+        showC = "";
+        connectTwo = "";
+    }
+    
+    if (subtract===1) {
+		if (b<0 && a!=0) {
+			connectOne = " - ";
+			showB = Math.abs(b)+"x";
+		if (b==-1) {
+			showB = "x";
+		}
+		}
+		if (c<0){
+			connectTwo = " - ";
+			showC = Math.abs(c);
+		}
+	}
+	}
+	
+	if (a=="se"){showA = "You ain't getting any + ";}
+	if (b=="se"){showB = "You ain't getting any + ";}
+	
+    numbSpace.textContent = i+".";
+    tempSpace.textContent = showA+connectOne+showB+connectTwo+showC+" = 0";
+    i=i+1;
+};
+
+function toggleSignFunc() {
+	if (subtract === 2) {
+		toggleSign.textContent = "All Coefficients Shown";
+		subtract = 0;
+	}
+	
+	else if (subtract === 1) {
+		toggleSign.textContent = "Add Negatives";
+		subtract = 2;
+	}
+	
+	else if (subtract === 0) {
+		toggleSign.textContent = "Subtract Positives";
+		subtract = 1;
+	}		
+};
+
+function toggleSqrtFunc() {	
+	if (exact === false) {
+		toggleSqr.textContent = "Exact Form";
+		exact = true;
+	}
+						
+	else {
+		toggleSqr.textContent = "Approximate Form";
+		exact = false;
+	}
+};
+</script>
+</body>
+</html>

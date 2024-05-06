@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="icon" href="Minesweeper_Icon.png">
+	<title>Minesweeper</title>
+	<style>
+	.square{position:absolute;
+		width:60px;
+		height:60px;
+		background: rgb(100,100,100);
+		text-align: center;
+		font-size: 30px;}
+	</style>
+</head>
+<body>
+	<input id="inputSize" placeholder="size">
+	<input id="inputMine" placeholder="mines">
+	<button id="start" onClick="start()">Reset</button>
+	<script>
+	var squareValue = [];
+	var square = [];
+	var functions = [];
+	var gridSize = 5;
+	var tiles;
+	var tilesUncovered;
+	var red = [];
+	var tileFound = [];
+	var offsetWin = 450;
+	
+	function getRandomInt(max) {
+  		return Math.floor(Math.random() * max);
+	}
+	
+	var start = function () {
+	
+	gridSize = parseFloat(document.getElementById("inputSize").value);
+	let mineChance = parseFloat(document.getElementById("inputMine").value);
+	tiles = 0;
+	tilesUncovered = 0;
+	
+	for (var i = 0; i<gridSize; i++) {
+		square[i] = [];
+		squareValue[i] = [];
+		functions[i] = [];
+		red[i] = [];
+		tileFound[i] = [];
+	}
+	
+	for (var i = 0; i<gridSize; i++) {
+		for (var j = 0; j<gridSize; j++) {
+			(function (row, col) {
+			functions[row][col] = function () {reveal(row,col)};
+			})(i, j);
+			square[i][j] = document.createElement("p");
+			square[i][j].style.left = eval(20+j*70)+"px";
+			square[i][j].style.top = eval(50+i*70)+"px";
+			square[i][j].className = "square";
+			red[i][j] = false;
+			tileFound[i][j] = false;
+			squareValue[i][j] = (getRandomInt(gridSize**2)<mineChance) ? 9 : 0;
+			square[i][j].onclick = functions[i][j];
+			document.body.appendChild(square[i][j]);
+		}
+	}
+	for (var i = 0; i<gridSize; i++) {
+	for (var j = 0; j<gridSize; j++) {
+		let mineCount = 0;
+		if (squareValue[i][j] != 9) {
+			tiles++;
+			if(i>0 && squareValue[i-1][j] == 9) {mineCount++;}
+			if(i>0 && j>0 && squareValue[i-1][j-1] == 9) {mineCount++;}
+			if(i>0 && j<gridSize-1 && squareValue[i-1][j+1] == 9) {mineCount++;}
+			if(j>0 && squareValue[i][j-1] == 9) {mineCount++;}
+			if(j<gridSize-1 && squareValue[i][j+1] == 9) {mineCount++;}
+			if(i<gridSize-1 && j>0 && squareValue[i+1][j-1] == 9) {mineCount++;}
+			if(i<gridSize-1 && squareValue[i+1][j] == 9) {mineCount++;}
+			if(i<gridSize-1 && j<gridSize-1 && squareValue[i+1][j+1] == 9) {mineCount++;}
+			squareValue[i][j] = mineCount;
+		}
+	}
+	}
+	}
+	
+	var reveal = function (i,j) {
+		if (event.shiftKey) {
+			if (red[i][j] == false) {
+			square[i][j].style.backgroundColor="rgb(255,0,0)";
+			red[i][j] = true;
+			}
+			else if (red[i][j] == true) {
+			square[i][j].style.backgroundColor="rgb(100,100,100)";
+			red[i][j] = false;
+			}
+		}
+		else if (squareValue[i][j] == 9) {start();}
+		else {
+			square[i][j].textContent = squareValue[i][j];
+			tilesUncovered++;
+			tileFound[i][j] = true;
+			}
+			
+		if (squareValue[i][j] == 0) {
+			if(i>0 && !tileFound[i-1][j]) {reveal(i-1,j);}
+			if(i>0 && j>0 && !tileFound[i-1][j-1]) {reveal(i-1,j-1);}
+			if(i>0 && j<gridSize-1 && !tileFound[i-1][j+1]) {reveal(i-1,j+1);}
+			if(j>0 && !tileFound[i][j-1]) {reveal(i,j-1);}
+			if(j<gridSize-1 && !tileFound[i][j+1]) {reveal(i,j+1);}
+			if(i<gridSize-1 && j>0 && !tileFound[i+1][j-1]) {reveal(i+1,j-1);}
+			if(i<gridSize-1 && !tileFound[i+1][j]) {reveal(i+1,j);}
+			if(i<gridSize-1 && j<gridSize-1 && !tileFound[i+1][j+1]) {reveal(i+1,j+1);}
+		}
+			
+		if (tilesUncovered == tiles) {
+			var win = document.createElement("p");
+			win.textContent = "YOU WIN";
+			win.style.position = "absolute";
+			win.style.left = offsetWin+"px";
+			win.style.top = "-7px";
+			document.body.appendChild(win);
+			offsetWin+=100;
+		}
+	}
+	</script>
+</body>
+</html>

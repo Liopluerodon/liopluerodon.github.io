@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" href="Competition_Icon.png">
+	<title>Perfect Competition</title>
+	<style type="text/css">
+		:root{--heightSched: 90px;}
+		body{background-color:rgb(200,150,120);}
+		td{
+			border: 1px solid rgb(100,50,20);
+			padding: 5px;
+			color: rgb(100,50,20);}
+		.point{
+			position: absolute;
+			margin: 0px 0px 0px 0px;
+			padding: 0px 0px 0px 0px;
+			float: bottom;
+			width: 2px;
+			height: 2px;
+			border: 0px;
+		}
+		.box{
+			margin: 20px;
+			padding: 20px;
+			background-color:rgb(220,170,140);
+			border: 2px solid rgb(150,100,70);
+			width: 60%;
+			border-radius: 20px;
+			left: 20%;
+			box-shadow: 5px 5px 10px rgb(150,100,70);
+			}
+		#costs{
+			overflow: hidden;
+			height: var(--heightSched);
+		}
+		@keyframes expand {
+			0%{height: 90px;}
+			100%{height: var(--heightSched);}
+		}
+		@keyframes dexpand {
+			0%{height: 132px;}
+			100%{height: var(--heightDem);}
+		}
+		.header{
+			font-size: 50px;
+			color: rgb(100,50,20);
+			font-family: sans-serif;
+			font-style: italic;
+			margin: 15px;
+		}
+		#demandSchedule{padding-top: 25px;}
+		#peds{
+			overflow: hidden;
+			height: var(--heightDem);
+			position: relative;
+			left: 0px;
+		}
+	</style>
+</head>
+<body>
+	<center id="main">
+	<div class="box">
+		<input id="chartLength">
+		<button onclick="makeChart()">Create Chart</button>
+	</div>
+	<div id="costs" class="box">
+		<p class="header">Cost Chart</p>
+		<table id="demandSchedule"></table>
+	</div>
+	<div id="peds" class="box">
+		<p class="header">Cost Curves</p>
+	</div>
+	</center>
+
+	<script type="text/javascript">
+		let ccbox = document.getElementById("peds");
+		let h = 0;
+		let tableStuff = [];
+		let w1;
+		let w2;
+		let be;			
+
+		function makeText(content, top, left) {
+			let tempText = document.createElement("p");
+			tempText.style.position = "absolute";
+			tempText.textContent = content;
+			tempText.style.left = left+"px";
+			tempText.style.top = top+"px";
+			tempText.style.color = "rgb(100,50,20)";
+			return tempText;}
+
+		function rounding(roundee, r) {return Math.round(roundee*Math.pow(10,r))/Math.pow(10,r);};
+
+		function makeChart() {
+			let schedule = document.getElementById("demandSchedule");
+			let length = parseFloat(document.getElementById("chartLength").value);
+
+			tableStuff[103] = document.createElement("tr");
+			schedule.appendChild(tableStuff[103]);
+			tableStuff[104] = document.createElement("td");
+			tableStuff[104].textContent = "Price";
+			tableStuff[103].appendChild(tableStuff[104]);
+			tableStuff[105] = document.createElement("td");
+			tableStuff[105].textContent = "Total Fixed Cost";
+			tableStuff[103].appendChild(tableStuff[105]);
+
+			tableStuff[106] = document.createElement("tr");
+			schedule.appendChild(tableStuff[106]);
+			tableStuff[107] = document.createElement("td");
+			tableStuff[106].appendChild(tableStuff[107]);
+			tableStuff[108] = document.createElement("td");
+			tableStuff[106].appendChild(tableStuff[108]);
+			tableStuff[109] = document.createElement("input");
+			tableStuff[107].appendChild(tableStuff[109]);
+			tableStuff[110] = document.createElement("input");
+			tableStuff[108].appendChild(tableStuff[110]);
+
+			tableStuff[100] = document.createElement("tr");
+			schedule.appendChild(tableStuff[100]);
+			tableStuff[101] = document.createElement("td");
+			tableStuff[101].textContent = "Output";
+			tableStuff[100].appendChild(tableStuff[101]);
+			tableStuff[102] = document.createElement("td");
+			tableStuff[102].textContent = "Marginal (Additional) Cost";
+			tableStuff[100].appendChild(tableStuff[102]);
+
+			for (let i = 0; i < length; i++) {
+				tableStuff[i] = [];
+				tableStuff[i][0] = document.createElement("tr");
+				schedule.appendChild(tableStuff[i][0]);
+				tableStuff[i][1] = document.createElement("td");
+				tableStuff[i][1].textContent = eval(i);
+				tableStuff[i][0].appendChild(tableStuff[i][1]);
+				tableStuff[i][2] = document.createElement("td");
+				tableStuff[i][0].appendChild(tableStuff[i][2]);
+				tableStuff[i][3] = document.createElement("input");
+				tableStuff[i][3].id = "qd"+eval(i+1);
+				tableStuff[i][2].appendChild(tableStuff[i][3]);
+			}
+
+
+			let button = document.createElement("button");
+			button.onclick = run;
+			h = 250+35*length;
+			button.textContent = "Chart PED";
+			document.getElementById("costs").appendChild(button);
+			document.documentElement.style.setProperty('--heightSched', h+'px');
+			document.getElementById("costs").style.animation = "expand 2.5s ease";}
+
+		function regress(x, y) {
+			var w = [0,0];
+			var b = 0;
+			var cost = 0;
+			var a = 0.1;
+			var iterations = 50000;
+			
+			function dot_product(vect, k, c) {return (vect[0]*x[k]+vect[1]*x[k]**2+c);}
+
+			function calcCost(vect1, vect2) {
+				cost=0;
+				for (let i=0; i<y.length; i++) {cost += (dot_product(vect1,i,vect2)-y[i])**2;}	
+				return cost/(2*y.length);}
+
+			function descend(newW, newB, length) {
+				for (let j = 0; j < length; j++) {
+					let sumW = [0,0];
+					let sumB = 0;
+					for (let i=0; i<y.length; i++) {sumW[0] += (dot_product(newW,i,newB)-y[i])*x[i];}
+					for (let i=0; i<y.length; i++) {sumW[1] += (dot_product(newW,i,newB)-y[i])*(x[i]**2);}
+					for (let i=0; i<y.length; i++) {sumB += dot_product(newW,i,newB)-y[i];}
+
+					newW[0] += -a*sumW[0]/y.length;		
+					newW[1] += -a*sumW[1]/y.length;
+					newB += -a*sumB/y.length;
+					b=newB;}}
+
+			let startCost = calcCost(w, b);
+			let optimalA = false;
+
+			while (optimalA == false) {
+				var A_W = [1,1];
+				var A_B = 1;
+				descend(A_W, A_B, 5);
+
+				if (calcCost(A_W, A_B)>startCost) {a=a/(10**(1/6));}
+				if (calcCost(A_W, A_B)<startCost) {optimalA=true;}
+			}
+
+			descend(w, b, iterations);
+			console.log("cost = "+calcCost(w, b)*500);
+			w1 = w[0];
+			w2 = w[1];
+			be = b;}
+
+		function graph(x, y, left, height, color = "black") {
+		let pixels = [];
+		pixels[x] = document.createElement("p");
+		pixels[x].style.backgroundColor = color;
+		pixels[x].className = "point";
+		pixels[x].style.top = height-y+"px";
+		pixels[x].style.left = x+left+"px";
+		ccbox.appendChild(pixels[x]);}
+
+		function run() {
+			let length = parseFloat(document.getElementById("chartLength").value);
+			let price = parseFloat(tableStuff[109].value);
+			let tfc = parseFloat(tableStuff[110].value);
+			let mc = [];
+			let counter = [];
+			let mrmc;
+			let atc; 
+
+			for (let i = 0; i<length; i++) {
+				mc[i] = parseFloat(tableStuff[i][3].value);
+				counter[i] = i;
+			}
+
+			console.log(counter);
+			console.log(mc);
+			regress(counter, mc);
+			console.log(w2+"x² + "+w1+"x + "+be);
+
+			let cnv = 100/price;
+			let scale = (length*1.5)/6.2;
+
+			for (let i = 0; i<6.2; i+=0.01) {
+				let j = i*scale;
+				graph(i*100, 0, 100, 300, "rgb(100,50,20)"); //x-axis
+				graph(i*100, 100, 100, 300, "green");  //MR=D=AR=P
+				graph(i*100, (w1*j+w2*j*j+be)*cnv, 100, 300, "red"); //MC
+				//graph(i*100, ((1/2)*w1*j**2 + (1/3)*w2*j**3 + be*j + tfc)*cnv, 100, 300, "red"); //TC
+				graph(i*100, ((1/2)*w1*j + (1/3)*w2*j**2 + be + tfc/j)*cnv, 100, 300, "red"); //ATC
+				graph(i*100, ((1/2)*w1*j + (1/3)*w2*j**2 + be)*cnv, 100, 300, "red"); //AVC
+				if (rounding((w1*j+w2*j*j+be)*cnv, 0) == 100) {mrmc = j; mrmcpos = i;}
+				if (Math.abs(rounding(j,0)-rounding(j,2))<0.015) {ccbox.appendChild(makeText(rounding(j,0),305,100+j*600/(length*1.5)));}
+			}
+
+			atc = ((1/2)*w1*mrmc + (1/3)*w2*mrmc**2 + be + tfc/mrmc);
+
+			ccbox.appendChild(makeText(price, 175, 70));
+			ccbox.appendChild(makeText(rounding(atc,2), 275-atc*100/price, 60));
+			for (let i = 0; i < 100; i++) {graph(mrmcpos*100,i,100,300, "rgb(100,50,20)");}
+			for (let i = 0; i < mrmcpos*100; i++) {graph(i,atc*100/price,100,300,"green");}
+			ccbox.appendChild(makeText(rounding(mrmc, 0),290,100+mrmcpos*100));
+
+
+			h = 300;
+			document.documentElement.style.setProperty('--heightDem', h+'px');
+			ccbox.style.animation = "dexpand 2.5s ease";}
+	</script>
+</body>
+</html>

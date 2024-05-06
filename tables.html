@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Tables</title>
+	<link rel="icon" href="Tables_Icon.png">
+	<style id="styleStuff">
+		body {background-color:rgb(128,128,128);}
+		td, th {border: 1px solid #dddddd;
+			text-align: left;
+			padding: 8px;
+		}
+	</style>
+</head>
+<body>
+	<input id="n" placeholder="Size" value="50">
+	<input id="scale" placeholder="Scale" value="5">
+	<input id="Cscale" placeholder="ColorScale" value="10">
+	<input id="round" placeholder="Round" value="3">
+	<input id="functin" placeholder="Function" value="x+y">
+	<button onClick="doAll()">Table</button>
+	<table id="table">
+		<tr id="a">
+			<th>F(x,y)</th>
+		</tr>
+		
+	</table>
+	
+	<script>
+	var table = document.getElementById("table");
+	function rounding(roundee,roundby) {return Math.round(roundee*Math.pow(10,roundby))/Math.pow(10,roundby);};
+	function f(x,y) {return eval(document.getElementById("functin").value);}
+	
+	
+	function doAll() {
+	
+	var scale = parseFloat(document.getElementById("scale").value);
+	var n = parseFloat(document.getElementById("n").value);
+	var r = parseFloat(document.getElementById("round").value);
+	var c = parseFloat(document.getElementById("Cscale").value);
+	
+	var cells = [];
+	var rows = [];
+	
+	
+	for (let i = 0; i < 2*n; i++) {
+		let y = (i-n)/scale;
+		
+		rows[i] = document.createElement("tr");
+		table.appendChild(rows[i]);
+		
+		cells[i] = [];
+		cells[i][0] = document.createElement("td");
+		cells[i][0].textContent = "y = " + y;
+		rows[i].appendChild(cells[i][0]);
+		
+		for (let j = 0; j < 2*n; j++) {
+			let x = (j-n)/scale;
+			cells[i][j] = document.createElement("td");
+			
+			if (i == 0) {cells[i][j].textContent = "x = " + x;}
+			else {
+				cells[i][j].className = "x"+x+"y"+y;
+				cells[i][j].textContent = rounding(f(x,y),r);
+				cells[i][j].style.backgroundColor = "rgb("+(f(x,y)*c+128)+","+(f(x,y)*c+128)+","+(f(x,y)*c+128)+")";
+				
+				if (f(x,y)+128>=128) {cells[i][j].style.color = "rgb(0,0,0)";}
+				if (f(x,y)+128<128) {cells[i][j].style.color = "rgb(255,255,255)";}
+				if (x == 0 || y == 0) {cells[i][j].style.fontWeight = "bold";}
+				}
+			
+			rows[i].appendChild(cells[i][j]);
+		}
+	}
+	}
+	</script>
+</body>
+</html>

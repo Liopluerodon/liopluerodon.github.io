@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Elasticity</title>
+	<link rel="icon" href="Ped_Icon.png">
+	<style type="text/css">
+		:root{
+			--heightSched: 88px;
+			--heightDem: 88px;
+		}
+		body{background-color:rgb(200,150,120);}
+		td{
+			border: 1px solid rgb(100,50,20);
+			padding: 5px;
+			color: rgb(100,50,20);}
+		.box{
+			margin: 20px;
+			padding: 20px;
+			background-color:rgb(220,170,140);
+			border: 2px solid rgb(150,100,70);
+			width: 60%;
+			border-radius: 20px;
+			left: 20%;
+			box-shadow: 5px 5px 10px rgb(150,100,70);
+			}
+		#sched{
+			overflow: hidden;
+			height: var(--heightSched);
+		}
+		@keyframes expand {
+			0%{height: 88px;}
+			100%{height: var(--heightSched);}
+		}
+		@keyframes dexpand {
+			0%{height: 132px;}
+			100%{height: var(--heightDem);}
+		}
+		.header{
+			font-size: 50px;
+			color: rgb(100,50,20);
+			font-family: sans-serif;
+			font-style: italic;
+			margin: 15px;
+		}
+		#demandSchedule{padding-top: 25px;}
+		#peds{
+			overflow: hidden;
+			height: var(--heightDem);
+		}
+	</style>
+</head>
+<body>
+	<center id="main">
+	<div class="box">
+		<input id="chartLength">
+		<button onclick="makeChart()">Create Chart</button>
+	</div>
+	<div id="sched" class="box">
+		<p class="header">Demand Schedule</p>
+		<table id="demandSchedule"></table>
+	</div>
+		<div id="peds" class="box">
+		<p class="header">Price Elasticity of Demand</p>
+		<table id="table"></table>
+	</div>
+	</center>
+
+	<script type="text/javascript">
+		let qds = [];
+		let table = document.getElementById("table");
+		let r = 2;
+		let h = 0;
+
+		function rounding(roundee) {
+			return Math.round(roundee*Math.pow(10,r))/Math.pow(10,r);};
+
+		function pedCalc(Np, Op, Nqd, Oqd) {
+			return rounding(((Nqd-Oqd)/Oqd)/((Np-Op)/Op));}
+
+		function makeChart() {
+			let schedule = document.getElementById("demandSchedule");
+			let length = parseFloat(document.getElementById("chartLength").value);
+			let tableStuff = [];
+
+			tableStuff[100] = document.createElement("tr");
+			schedule.appendChild(tableStuff[100]);
+			tableStuff[101] = document.createElement("td");
+			tableStuff[101].textContent = "Price";
+			tableStuff[100].appendChild(tableStuff[101]);
+			tableStuff[102] = document.createElement("td");
+			tableStuff[102].textContent = "Quantity Demanded";
+			tableStuff[100].appendChild(tableStuff[102]);
+
+			for (let i = 0; i < length; i++) {
+				tableStuff[i] = [];
+				tableStuff[i][0] = document.createElement("tr");
+				schedule.appendChild(tableStuff[i][0]);
+				tableStuff[i][1] = document.createElement("td");
+				tableStuff[i][1].textContent = "$"+eval(i+1);
+				tableStuff[i][0].appendChild(tableStuff[i][1]);
+				tableStuff[i][2] = document.createElement("td");
+				tableStuff[i][0].appendChild(tableStuff[i][2]);
+				tableStuff[i][3] = document.createElement("input");
+				tableStuff[i][3].id = "qd"+eval(i+1);
+				tableStuff[i][2].appendChild(tableStuff[i][3]);
+			}
+
+			let button = document.createElement("button");
+			button.onclick = run;
+			h += 150+40*length;
+			button.textContent = "Chart PED";
+			document.getElementById("sched").appendChild(button);
+			document.documentElement.style.setProperty('--heightSched', h+'px');
+			document.getElementById("sched").style.animation = "expand 2.5s ease";}
+
+		function run() {
+			let length = parseFloat(document.getElementById("chartLength").value);;
+			for (let i = 0; i < length; i++) {
+				qds[i] = []
+				qds[i][0] = eval(i+1);
+				qds[i][1] = parseFloat(document.getElementById("qd"+eval(i+1)).value);
+			}
+			
+			let tableDat = [];
+
+			for (let i = 0; i < length+1; i++) {
+				tableDat[i] = [];
+				for (let j = 0; j < length+1; j++) {
+					if (j == 0) {
+						tableDat[i][length+2] = document.createElement("tr");
+						tableDat[i][j] = document.createElement("td");
+						if (i != 0) {
+							tableDat[i][j].textContent = i;
+						}
+						else {tableDat[i][j].textContent = "i->j";}
+						table.appendChild(tableDat[i][length+2]);
+						tableDat[i][length+2].appendChild(tableDat[i][j]);
+					}
+					if (i == 0 && j != 0) {
+						tableDat[i][j] = document.createElement("td");
+						tableDat[i][j].textContent = j;
+						tableDat[i][length+2].appendChild(tableDat[i][j]);
+					}
+					if (i != 0 && j != 0) {
+						tableDat[i][j] = document.createElement("td");
+						let tmpVar = pedCalc(qds[j-1][0], qds[i-1][0], qds[j-1][1], qds[i-1][1])
+						tableDat[i][j].textContent = tmpVar;
+						if (Math.abs(tmpVar)<1) {tableDat[i][j].style.backgroundColor = "rgb(100,100,100)";}
+						if (Math.abs(tmpVar)>1) {tableDat[i][j].style.backgroundColor = "rgb(200,200,200)";}
+						tableDat[i][length+2].appendChild(tableDat[i][j]);
+					}
+				}
+			}
+			h = 100+40*length;
+			document.documentElement.style.setProperty('--heightDem', h+'px');
+			document.getElementById("peds").style.animation = "dexpand 2.5s ease";}
+	</script>
+</body>
+</html>

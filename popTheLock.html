@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" href="Lock_Icon.png">
+	<title>Pop the Lock</title>
+	<style>
+		.general{position: absolute;}
+		.circle{border-radius: 100%;}
+		#bar{
+			background-color:rgb(235,30,130);
+			width:50px;
+			height:10px;
+			border-radius: 5px;
+			left: 575px;
+			top: 300px;
+			z-index: 100;
+			rotate: 0deg;
+		}
+		#centerLarge{
+			width: 500px;
+			height: 500px;
+			background-color: rgb(50,50,50);
+			left:150px;
+			top:50px;
+			z-index: 9;
+		}
+		#centerColored{
+			width: 300px;
+			height: 300px;
+			left: 250px;
+			top: 100px;
+			z-index: 10;
+			background-color: rgb(0,190,150);
+			box-shadow: 0 0 50px rgb(0, 190, 150);
+			text-align: center;
+			line-height: 300px;
+			color: rgb(0, 140, 100);
+			font-size: 70px;
+		}
+		.coin{
+			background-color: rgb(255,255,0);
+			position: absolute;
+			width: 25px;
+			height: 25px;
+			border-radius: 100%;
+			z-index: 90;
+		}
+		#RingInner{
+			width: 550px;
+			height: 550px;
+			left: 125px;
+			top: 25px;
+			z-index: 8;
+			background-color: rgb(0, 190, 150);
+			box-shadow: 0 0 50px rgb(255, 16, 240);
+		}
+		body{background-color: rgb(0, 140, 100);}
+	</style>
+</head>
+<body>
+	<p id="bar" class="general"></p>
+	<p id="centerLarge" class="general circle"></p>
+	<p id="centerColored" class="general circle"></p>
+	<p id="RingInner" class="general circle"></p>
+	<script type="text/javascript">
+		//use origin+a*sin(x) and origin+a*cos(x) to create circulsr motion
+		let bar = document.getElementById("bar");
+		let counter = document.getElementById("centerColored");
+		let score = 0;
+		let pos = [200,0];
+		let origin = [600,300];
+		let angle = 0;
+		let dotPlaced = false;
+		let a = 2;
+		let dot = [];
+		let dotAngle = [];
+		let pressed = false;
+		let buffer = 0;
+		let passedCoin = false;
+
+		//Customizables
+		let min = 0.1;
+		let increment = 0.01; //Increases a minor amount upon clicking a coin (part of the scuffed math stuff)
+		let range = 0.5;
+		let threshold = 0.1; //The area around the center of the coin where the player gets the coin when space is clicked
+		let bufferLimit = 10; //How many runs of rotate can pass when space is pressed before score is reset
+
+		function lose() {angle = 0; increment = 0.01; buffer = 0; score = 0; passedCoin = false;}
+
+		function rotate() {
+			pos[0] = 200*Math.cos(angle);
+			pos[1] = 200*Math.sin(angle);
+			angle += increment;
+			bar.style.left = origin[0]+pos[0]-225+"px";
+			bar.style.top = origin[1]-pos[1]+"px";
+			bar.style.rotate = -angle+"rad";
+			
+			if (pressed) {
+				if (dotAngle[a-1] > angle-threshold && dotAngle[a-1] < angle+threshold) {
+					dotPlaced = false;
+					dot[a-1].style.display = "none";
+					increment *= -1;
+					increment += Math.sign(increment)*0.001;
+					score++;
+					passedCoin = false;
+				}
+				else if (dotAngle[a-2] > angle-5*threshold && dotAngle[a-2] < angle+5*threshold) {}
+				else {lose();}
+			}
+
+			//else {buffer = 0;}
+
+			if (!dotPlaced) {
+				dotAngle[a] = angle+range*(Math.random()+min)*(0.1/increment);
+				dotAngle[0] = dotAngle[a]
+				dotAngle[1] = dotAngle[a]
+				dot[a] = document.createElement("p")
+				dot[a].className = "coin";
+				dot[a].style.left = origin[0]+200*Math.cos(dotAngle[a])-212.5+"px";
+				dot[a].style.top = origin[1]-200*Math.sin(dotAngle[a])-12.5+"px";
+				document.body.appendChild(dot[a]);
+				dotPlaced = true;
+				a++;
+				console.log("pushPrevBack");
+			}
+
+			if (angle > 6.283) {angle = 0;}
+			if (angle < 0) {angle = 6.283;}
+			if (dotAngle[a-1] > 6.283) {dotAngle[a-1] += -6.283}
+			if (dotAngle[a-1] < 0) {dotAngle[a-1] += 6.283}
+			counter.textContent = score;
+		}
+
+		window.setInterval(rotate, 10);
+
+		document.addEventListener('keydown', function(event) {if (event.code === 'Space') {pressed = true;}});
+		document.addEventListener('keyup', function(event) {if (event.code === 'Space') {pressed = false;}});
+
+	</script>
+</body>
+</html>

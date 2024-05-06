@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>3D Graphs</title>
+	<link rel="icon" href="Graphs_Icon.png">
+	<style>
+		body{background-color:rgb(128,128,128);}
+		#scalein{position:absolute;
+			left: 1000px;}
+		#sizein{position:absolute;
+			left: 1000px;
+			top: 50px;}
+		#functin{position:absolute;
+			left: 1000px;
+			top: 100px;}
+		#graphbut{position:absolute;
+			left: 1200px;
+			top: 100px;}
+		.pixel{width: 2px;
+			height: 2px;
+			padding: 0px 0px 0px 0px;
+			border: 0px ridge rgb(0,0,0);
+			margin: 0px 0px 0px 0px;
+			position: absolute;
+			float: bottom;}
+	</style>
+	</head>
+	<body>
+		<input id="scalein" placeholder="Scale">
+		<input id="sizein" placeholder="Size">
+		<input id="functin" placeholder="Function">
+		<button id="graphbut" type="number">Graph</button>
+		
+		<script>
+		var graphbut = document.getElementById("graphbut");
+		
+		var scale = 1;
+		var graphWidth = 100;
+		var pixels = [];
+		
+		function f(x,y) {
+			x = x/scale;
+			y = y/scale;
+			var fxy = eval(document.getElementById("functin").value);
+			return fxy + 128
+		}
+		
+		function graph() {
+		graphWidth = Number(document.getElementById("sizein").value);
+		scale = Number(document.getElementById("scalein").value);
+		
+		for (var j=-graphWidth; j<graphWidth; j++) {
+		for (var i=-graphWidth; i<graphWidth; i++) {
+			pixels[i] = [];
+			pixels[i][j] = document.createElement("p");
+			pixels[i][j].style.backgroundColor = "rgb("+f(i,j)+","+f(i,j)+","+f(i,j)+")";
+			pixels[i][j].className = "pixel";
+			pixels[i][j].style.top = 2*(graphWidth-i)+"px";
+			pixels[i][j].style.left = 2*(j+graphWidth)+"px";
+			document.body.appendChild(pixels[i][j]);
+		}
+		}
+		}
+		
+		graphbut.addEventListener("click", graph);
+		</script>
+	</body>
+</html>

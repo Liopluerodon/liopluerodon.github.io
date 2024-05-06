@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Billiards</title>
+	<link rel="icon" href="Elastic_Icon.png">
+</head>
+<body>
+	<input id="mass" placeholder="mass in kg" value=1>
+	<input id="speed" placeholder="speed in m/s" value=10>
+	<input id="magni" placeholder="magnitude in radians" value=3.14>
+	<p id="stats"></p>
+<script>
+	var particle = [];
+	var partDat = [];
+	var partCount = 0;
+	var smoothness = 10;
+	var iterate;
+	var totalEnergy;
+	var totalMomentum = [];
+	var accel;
+	var curXpos = [];
+	var curYpos = [];
+	var vi;
+	var vj;
+	
+	var newVelocity = function(i,j, u1, u2) {
+		vi = u1*((partDat[i].mass-partDat[j].mass)/(partDat[i].mass+partDat[j].mass))+u2*((2*partDat[j].mass)/(partDat[j].mass+partDat[i].mass));
+		vj = u1*((2*partDat[i].mass)/(partDat[i].mass+partDat[j].mass))+u2*((partDat[j].mass-partDat[i].mass)/(partDat[j].mass+partDat[i].mass));
+		
+	}
+	
+	var placeParticle = function (e) {
+		if (e.clientX>730 || e.clientY>30) {
+		partDat[partCount] = {
+			Xpos:e.clientX,
+			Ypos:e.clientY-15,
+			speed: parseFloat(document.getElementById("speed").value),
+			magnitude: parseFloat(document.getElementById("magni").value),
+			Xspeed: 0,
+			Yspeed: 0,
+			kineticEnergy: 0,
+			mass: parseFloat(document.getElementById("mass").value)
+		};
+		
+		partDat[partCount].Xspeed = partDat[partCount].speed*Math.cos(partDat[partCount].magnitude);
+		partDat[partCount].Yspeed = partDat[partCount].speed*Math.sin(partDat[partCount].magnitude);
+		partDat[partCount].kineticEnergy = (1/2)*(partDat[partCount].mass)*(partDat[partCount].speed**2);
+
+		console.log(partDat);
+		
+		particle[partCount] = document.createElement("p");
+		particle[partCount].style.position = "absolute";
+		particle[partCount].style.width = "20px";
+		particle[partCount].style.height = "20px";
+		particle[partCount].style.borderRadius = "100%";
+		particle[partCount].style.background = "rgb("+eval(20*partDat[partCount].mass)+","+eval(20*partDat[partCount].mass)+","+eval(20*partDat[partCount].mass)+")";
+		particle[partCount].style.top = partDat[partCount].Ypos + "px";
+		particle[partCount].style.left = partDat[partCount].Xpos + "px";
+		document.body.appendChild(particle[partCount]);
+		
+		partCount++;
+	}
+	};
+	
+	var collision = function (i,j) {
+		newVelocity(i,j,partDat[i].Xspeed,partDat[j].Xspeed);
+		partDat[i].Xspeed = vi;
+		partDat[j].Xspeed = vj;
+		newVelocity(i,j,partDat[i].Yspeed,partDat[j].Yspeed);
+		partDat[i].Yspeed = vi;
+		partDat[j].Yspeed = vj;
+		let tmpImag = partDat[i].magnitude;
+		partDat[i].magnitude = partDat[j].magnitude;
+		partDat[j].magnitude = tmpImag;
+		
+		
+		partDat[i].speed = Math.sqrt(partDat[i].Xspeed**2+partDat[i].Yspeed**2);
+		partDat[i].kineticEnergy = (1/2)*(partDat[i].mass)*(partDat[i].speed**2);
+		
+		partDat[j].speed = Math.sqrt(partDat[j].Xspeed**2+partDat[j].Yspeed**2);
+		partDat[j].kineticEnergy = (1/2)*(partDat[j].mass)*(partDat[j].speed**2);
+		
+		//The 2x1 vector velocity, after a dot product with itself becomes v1**2+v2**2 which equals speed**2, multiplied by a constant scalar mass, give a scalar energy.
+		
+		console.log(partDat);
+	}
+	var run = function () {
+		console.log("iterae! particleCount: "+partCount);
+		totalEnergy = 0;
+		totalMomentum[0] = 0;
+		totalMomentum[1] = 0;
+		for (var i = 0; i<partCount; i++) {
+			particle[i].style.left = eval(partDat[i].Xpos + partDat[i].Xspeed/smoothness) + "px";
+			particle[i].style.top = eval(partDat[i].Ypos - partDat[i].Yspeed/smoothness) + "px";
+			
+			partDat[i].Xpos += partDat[i].Xspeed/smoothness;
+			partDat[i].Ypos += -1*partDat[i].Yspeed/smoothness;
+			
+			curXpos[i] = Math.floor(partDat[i].Xpos);
+			curYpos[i] = Math.floor(partDat[i].Ypos);
+			totalEnergy += partDat[i].kineticEnergy;
+			totalMomentum[0] += partDat[i].mass*partDat[i].Xspeed;
+			totalMomentum[1] += partDat[i].mass*partDat[i].Yspeed;
+			
+		}
+		document.getElementById("stats").textContent = "Total Energy = " + Math.round(totalEnergy*Math.pow(10,2))/Math.pow(10,2) + ", Horizontal Momentum = " + Math.round(totalMomentum[0]*Math.pow(10,2))/Math.pow(10,2) + ", Vertical Momentum = " + Math.round(totalMomentum[1]*Math.pow(10,2))/Math.pow(10,2);
+		
+		for (var i = 0; i<curXpos.length; i++) {
+			for (var j = i+1; j<=curXpos.length; j++) {
+				if (Math.abs(curXpos[j]-curXpos[i]) < 20 && Math.abs(curYpos[j]-curYpos[i]) < 20) {
+						console.log("Particle " + i + " and Particle " + j + " kissed omg!!!");
+						collision(i,j);
+				}
+			}
+		}
+	}
+	
+	
+	document.addEventListener("click", placeParticle);
+	iterate = setInterval(run, 1000/smoothness);
+	iterate;
+</script>
+</body>
+</html>
