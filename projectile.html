@@ -81,7 +81,6 @@
 		<em>Simulation Parameters: Time mimics reality, 1 pixel = 1 meter (this is important! The ball may appear to fall slowly at times, but it is traveling a large distance per second to the simulation)</em><br><br>
 		This is a projectile simulator! Simply input a speed, angle, air resistance coefficient, mass, and gravitational acceleration and press start to run the simulation! The velocity elements refer specifically to the object's vertical velocity.<br><br>
 		Drag is a force that acts in the opposite direction of motion. The drag force can be proportional to velocity (Stokes Drag) or proportional to velocity squared (Newton Drag). As an object's speed through a fluid increases, at a certain speed the drag force on it will shift from Stokes Drag and Newton Drag. This is dependent on the Reynold's Number, which is dependent on velocity, diameter, and viscosity. To make a long story short, in air the product of speed and diameter must be greater than 0.015m²/s for drag to shift from linear to quadratic. Since projectiles generally travel faster than that, I've decided to just use Newton Drag, where air resistance is proportional to velocity squared. Newton's formula for air resistance is the product of the velocty squared, the cross-sectional area of the body, the air density, the drag coefficient, and an extra 0.5 coefficient. For simplicity, these parameters were reduced to the single value being inputted. <br><br>
-		The solution to the differential equation <br> -y'*|y'|*b=m*y'' <br> where m is mass and y is the horizontal position as a function of time <br> (this comes from air resistance force = -|v|/v*b*v² = -|v|*v*b, where the -|v|/v ensures the force is the opposite sign of the velocity, or in the opposite direction as the movement) <br> (The m*y'' comes from f=m*a, and acceleration is the derivative of velocity and 2nd derivative of position). <br> The solution is <br> xpos(t)=x0+m*ln((b*v0*t/m)+1)/b <br> where v0 and x0 are initial horizontal velocity and speed.<br><br>
 		Terminal Velocity is reached when air resistance and gravitational force are equal and cancel each other out. This can be represented as b*v²=m*|g|, which becomes v=sqrt(m|g|/b). At this velocity, the two forces equal and the total force and thus acceleration becomes 0.<br><br>
 	</p>
 <script type="text/javascript">
@@ -117,34 +116,16 @@
 		time+=1/100;
 
 		ball.pos[0]+=ball.vel[0]/100;
-		//ball.pos[0]=ball.mass*Math.log(b*(Math.cos(angle)*speed)*time/ball.mas+1)/b; //Works the exact same
 		ball.pos[1]+=ball.vel[1]/100;
 
-		//Air resistance is -|v|/v * 0.5cpA * v^2
-			//c=drag coeff, p=air density, A=cross section area, so the middle term is collapsed to b
-			//-|v|/v is the math way of saying "In the opposite direction of v"
-			//The first and third terms can be collapsed into -|v|*v
-			//Our final differential equation is -y'*|y'|*b=y'', which is simplified to -y*|y|*b=y'
-			//y is the horizontal velocity as a function of time
 
-		//Using calculus, we get y=1/(bt+c), where c is a constant
-			//If c is set to 1/(sin(angle)*speed) (in other words, 1/v0), we get the velocity at a time
-			//The math is matching!
-			//The integral of 1/(bt+1/v0) dt will give xpos over time 
-			//The solution is ln(b*v0*t+1)/b, which returns the x position for time t, air resistance b, and initial velocity v0
-
-
-		airResistance = [-Math.abs(ball.vel[0])*b*ball.vel[0], -Math.abs(ball.vel[1])*b*ball.vel[1]];
-		force = [airResistance[0],ball.mass*g+airResistance[1]]
+		speed = Math.sqrt(ball.vel[0]**2+ball.vel[1]**2);
+		airResistance = -speed*Math.abs(speed)*b;
+		force = [airResistance*ball.vel[0]/speed,ball.mass*g+airResistance*ball.vel[1]/speed];
 		ball.vel[1]+=force[1]/100/ball.mass;
 		ball.vel[0]+=force[0]/100/ball.mass;
 
 		document.getElementById("current").textContent = "Current Velocity: "+Math.round(100*ball.vel[1])/100+"m/s";
-
-		//graph(ball.mass*Math.log(b/ball.mass*initialVelocity[0]*time+1)/b,0,0,origin[1]);
-
-		//graph(ball.pos[0], ball.vel[0], 0, 1000);
-		//graph(ball.pos[0], 1/(b*time+1/initialVelocity[0]), 0, 1000);
 
 		ballEl.style.left = origin[0]+ball.pos[0]+"px";
 		ballEl.style.top = origin[1]-ball.pos[1]+"px";
