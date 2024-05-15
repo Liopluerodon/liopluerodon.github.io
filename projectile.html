@@ -13,7 +13,7 @@
 		}
 		#ball{
 			position: absolute;
-			top: 380px;
+			top: 374px;
 			left: 0px;
 			width: 20px;
 			height: 20px;
@@ -130,7 +130,7 @@
 		ballEl.style.left = origin[0]+ball.pos[0]+"px";
 		ballEl.style.top = origin[1]-ball.pos[1]+"px";
 
-		if (trace) {graph(ball.pos[0], ball.pos[1]-20, ...origin);}
+		if (trace) {graph(ball.pos[0]+10, ball.pos[1]-26, ...origin);}
 	}
 	
 	function start() {
