@@ -40,8 +40,10 @@
 	<text id="conclusion">So it seems that gravity cannot be simulated with 100% accuracy using this method</text><br>
 	<text id="conclusion">Indeed, the graph of position of this ball should produce something like a sine wave with semicircles, whose derivative and 2nd derivative (v and a) have asymptotes</text><br>
 	<text id="conclusion">Dulling these asymptotes using band-aids like softeners increases innaccuracy</text><br>
-	<text id="conclusion">On the corresponding kinetic energy, the effect can be seen with spikes that pop upward and straight lines capping the spikes</text><br>
-	<text id="conclusion">If the mathematically optimal / physically accurate trajectory was followed, the motion would be perfectly cyclical, but alas its impossible to trully make it cyclical without neutering accuracy</text><br>
+	<text id="conclusion">On the corresponding kinetic energy graph, the effect can be seen with curved spikes (softeners) and straight lines capping the spikes (no accel), while a real kinetic energy graph would have asymptotes</text><br>
+	<text id="conclusion">If the mathematically optimal / physically accurate trajectory was followed, the motion would be perfectly cyclical, but alas it's impossible to trully make it cyclical without neutering accuracy</text><br>
+	<text id="conclusion">As for collisions in the simulation causing total momentum to change (something that shouldn't occur with perfectly elastic collisions), this is because whenever two particles collide, their acceleration is set to 0 by the program</text><br>
+	<text id="conclusion">This is because otherwise, acceleration can overpower the post-collision velocity (the accel switches the sign of the post-collision velocity, keeping the particle moving in the same direction towards each other), causing colliding particles to sorta stick together before shooting apart. </text><br>
 	<p class="particle" id="anchor"></p>
 	<p class="particle" id="subject"></p>
 	<script type="text/javascript">
