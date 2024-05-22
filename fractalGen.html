@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="icon" href="Fractal_Icon.png">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Fractal Generator</title>
+	<style>
+		body{background-color: rgb(50,50,50);}
+		p{
+			position: absolute;
+			background-color: rgb(200,200,200);
+			color: rgb(50,50,50);
+		}
+		.point{
+			width: 1px;
+			height: 1px;
+		}
+		.bigPoint{
+			width: 4px;
+			height: 4px;
+		}
+		.pixels{
+			width: 2px;
+			height: 2px;
+			pading: 0px 0px 0px 0px;
+			margin: 0px 0px 0px 0px;
+			float: bottom;
+			position: absolute;
+			border: 0px;
+		}
+		.arrow{
+			line-height: 1px;
+			height: 1px;
+			width: 40px;
+			transform-origin: center left;
+			color: white;
+			background-color: white;
+		}
+
+
+		.box{
+			margin-left: auto;
+			margin-right: auto;
+			border: ridge 16px black;
+			background-color: lightgray;
+			width: 600px;
+			padding: 30px;
+			font-size: 50px;
+			text-align: center;
+			margin-bottom: 20px;
+		}
+		.value{width: 60px;}
+		input{
+			height: 30px;
+			margin: 10px;
+			font-size: 20px;
+			text-align: center;
+		}
+		h1{font-size: 40px;}
+		h2{
+			font-size: 20px;
+			font-weight: normal;
+		}
+		#left{
+			position: relative;
+			left: -50px;
+			width: 400px;
+			top: -13px;
+		}	
+		#right{
+			position: relative;
+			left: 250px;
+			top: -180px;
+			width: 400px;
+		}
+		#headingBox{font-size: 25px;}
+		#runIt{
+			position: absolute;
+			left: 25%;
+			font-size: 30px;
+			padding: 20px;
+			border: solid 8px black;
+			border-radius: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div id="info">
+		<div class="box" id="headingBox">
+			<h2><strong>This program creates fractals, among other things.</strong> The user submits the proportions of the graph and the recursive function they want visualized. Then, the program generates the graph, coloring pixels darker if they diverge faster and black if they dont diverge at all when the submitted function is applied recursively starting with that point. This sort of process is how the iconic mandelbrot set is generated. In fact, running the preset settings will generate the Mandelbrot in all its glory.</h2>
+		</div>
+
+		<div class="box">
+			<div id="left">
+				<h1>Domain:</h1>
+				[<input id="domainMin" class="value" placeholder="min" value="-2">,<input id="domainMax" class="value" placeholder="max" value="1">]
+			</div>
+			<div id="right">
+				<h1>Range:</h1>
+				[<input id="rangeMin" class="value" placeholder="min" value="-1">,<input id="rangeMax" class="value" placeholder="max" value="1">]
+			</div>
+			<h2>
+				The domain and range of the graph. Place the minimum value first, and the maximum value last.
+			</h2>
+		</div>
+
+		<div class="box">
+			<h1>Size:</h1>
+			<input id="domSize"  placeholder="Domain Scale" value="480"> 
+			<input id="ranSize" placeholder="Range Scale" value="480">
+			<h2>
+				This is how many pixels each "1" of the doman and each "1" of the range take up. In other words, how many pixels are between 0 and 1 on the graph. Keep the domainScale and rangeScale equal for an even (not stretched or squished) graph, increase this values to zoom in.
+			</h2>
+		</div>	
+
+		<div class="box">
+			<h1>Gridlines:</h1>
+			<input id="domGrid"  placeholder="Domain Gridlines" value="0.5"> 
+			<input id="ranGrid" placeholder="Range Gridlines" value="0.5">
+			<h2>
+				Places a gridline every ___ units. For example, a graph with a domain [-2,3] and a domain gridline at every 1/2 will have a total of 11 gridlines including the boundaries.
+			</h2>
+		</div>
+
+		<div class="box">
+			<h1>Function:</h1>
+			<input id="f1" placeholder="X-output" value="a**2-b**2+c"> 
+			<input id="f2" placeholder="Y-output" value="2*a*b+d">
+			<h2>
+				This is the most important part: The Recursive Function. It accepts 4 inputs: <strong>a</strong> and <strong>b</strong>, which are the coordinates of the previous iteration of the function, and <strong>c</strong> and <strong>d</strong>, which are the inital coordinates of the function. Basically, at point (<strong>c</strong>,<strong>d</strong>), the program plugs in the coordinate to the function and is returned a new coordinate. This new coordinate is again plugged into the function as <strong>a</strong> and <strong>b</strong>, which along with the original <strong>c</strong> and <strong>d</strong> are combined to get a new point, upon which the cycle repeats.
+			</h2>
+		</div>	
+
+		<div class="box">
+			<h1>Parameters:</h1>
+			<input id="inc" placeholder="Increment" value="0.002"> 
+			<input id="thr" placeholder="Threshold" value="2">
+			<input id="ite" placeholder="Iterations" value="50">
+			<h2>
+				These values dictate how the function is applied. Increment is the gap between each coordinate the program applies the function to. If this value is too big, the graph will have gaps. Too small, the the program takes longer without any improvement is visual quality. Only increase when the size of the graph increases, and DO NOT make the size of the graph too big or the program will take an unfeasible amount of time to run.<br><br>
+				Threshold is the minimum distance for which the program decides that the coordinate has diverged and doesn't need to be recursed on anymore. For example, if threshold is 5 and at a coordinate the function returns (6,0), the program will stop iterating the function, graph the point, and continue.<br><br>
+				Iterations is the amount of times the program is run on a point. The more iterations, the more accurately the program will be able to check if a point diverges or not. When zoomed in, it is generally necessary to increase this value. However, this is another computationally intensive value, so don't go overboard.
+			</h2>
+		</div>
+
+		<div class="box">
+			<h1>Output:</h1>
+			<input id="fil" placeholder="read desc" value="1"> 
+			<h2>
+				If the value inside is "1", the program will color every single pixel, and the color will depend on the rate at which the function diverges. If the value is "0", the program will only color the pixels that don't diverge. 
+			</h2>
+		</div>
+
+		<button id="runIt" onclick="initialize()">Generate the Graph! (give it some time to load)</button>
+	</div>
+	<script>
+
+		let dom = [-2,1];
+		let ran = [-1,1];
+		let domSize = 480;
+		let ranSize = 480;
+		let domGrid = 1/2;
+		let ranGrid = 1/2;
+		let f1 = "a**2-b**2+c";
+		let f2 = "2*a*b+d";
+		let inc = 0.002;
+		let thr = 2;
+		let ite = 50;
+		let fil = 1;
+
+		function everything() {
+			let domain = dom;
+			let range = ran;
+			//Scale is how much space an integer takes up (a scale of 1 means y=2 is one pixel wide)
+			let domainScale = domSize;
+			let rangeScale = ranSize;
+			let domainShift = domainScale/40;
+			let rangeShift = rangeScale/40;
+			let spatialRatio = rangeScale/domainScale; //Ratio between domain size and range size
+			//Axes is the the numerical (not spatial) gap between axes
+			let domainAxes = domGrid;
+			let rangeAxes = ranGrid;
+			//For now, make sure the domain axes is a factor of the domain, and same with range
+			let origin = [100+Math.abs(domain[0])*domainScale,100+Math.abs(range[1])*rangeScale];
+
+			function line(horizontal, offset, start, end, thickness) {
+				let temp = document.createElement("p");
+				if (!horizontal) {
+					temp.style.left = offset*domainScale+origin[0]+"px";
+					temp.style.top = origin[1]-start*rangeScale+"px";
+					temp.style.width = thickness+"px";
+					temp.style.height = Math.abs((origin[1]-end*rangeScale)-(origin[1]-start*rangeScale))+"px";
+				}	
+				if (horizontal) {
+					temp.style.left = origin[0]+start*domainScale+"px";
+					temp.style.top = origin[1]-offset*rangeScale+"px";
+					temp.style.width = (end-start)*domainScale+"px";
+					temp.style.height = thickness+"px";
+				}
+				document.body.appendChild(temp);}
+
+			function graph(x, y, left, height, color = "white") {
+			let pixels = [];
+			pixels[x] = document.createElement("p");
+			pixels[x].style.backgroundColor = color;
+			pixels[x].className = "pixels"
+			pixels[x].style.top = height-y+"px";
+			pixels[x].style.left = x+left+"px";
+			document.body.appendChild(pixels[x]);}
+
+			function point(x,y, color="black") {
+				let temp = document.createElement("p");
+				temp.className = "point";
+				temp.style.left = origin[0]+x*domainScale+"px";
+				temp.style.top = origin[1]-y*rangeScale+"px";
+				temp.style.backgroundColor = color;
+				document.body.appendChild(temp);
+				return temp;}
+
+			function bigPoint(x,y, color="black") {
+				let temp = document.createElement("p");
+				temp.className = "bigPoint";
+				temp.style.left = origin[0]+x*domainScale-2+"px";
+				temp.style.top = origin[1]-y*rangeScale-2+"px";
+				temp.style.backgroundColor = color;
+				document.body.appendChild(temp);}
+
+			function text(texts, left, top) {
+				let temp = document.createElement("p");
+				temp.textContent = texts;
+				temp.style.top = top+"px";
+				temp.style.left = left+"px";
+				document.body.appendChild(temp);}
+
+			function arrow(x1, y1, x2, y2) {
+				let dx = x2-x1;
+				let dy = y2-y1;
+				let degree = Math.atan2(dy, dx/spatialRatio);
+				let magnitude = Math.sqrt((dx)**2+(dy)**2);
+				let newMag = magnitude*(rangeShift*domainShift)/Math.sqrt((rangeShift*Math.cos(degree))**2+(domainShift*Math.sin(degree))**2);
+				let tmp = document.createElement("p");
+				//tmp.textContent = "→";
+				tmp.className = "arrow";
+				tmp.style.position = "absolute";
+				tmp.style.left = origin[0]+x1*domainScale+"px";
+				tmp.style.top = origin[1]-y1*rangeScale+"px";
+				tmp.style.transform = `rotate(${-1*degree}rad) scaleX(${newMag})`;
+				document.body.appendChild(tmp);}
+
+			line(false, 0, range[1], range[0], 2);
+			line(true, 0, domain[0], domain[1], 2);
+
+			for (let i = domain[0]; i <= domain[1]; i+=domainAxes) {line(false, i, range[1], range[0], 1);}
+			for (let i = range[0]; i <= range[1]; i+=rangeAxes) {line(true, i, domain[0], domain[1], 1);}
+
+			text(". "+range[0]+"i .", origin[0]-16, origin[1]-range[0]*rangeScale+5);
+			text(". "+range[1]+"i .", origin[0]-16, origin[1]-range[1]*rangeScale-25);
+			text(". "+domain[1]+" .", origin[0]+domain[1]*domainScale+5, origin[1]-5);
+			text(". "+domain[0]+" .", origin[0]+domain[0]*domainScale-55, origin[1]-5);
+
+			function getCoords(event) {
+				graphRec((event.pageX-origin[0])/domainScale, -(event.pageY-origin[1]-17)/rangeScale);
+			}
+			document.addEventListener('click', function() {getCoords(event);}),10;
+
+			function dist(m,n=[0,0]) {return Math.sqrt((m[0]-n[0])**2+(m[1]-n[1])**2);}
+			function recurse(a,b,c,d) {return [eval(f1), eval(f2)];} 
+				//a+bi is the complex number being iterated over
+				//c+di is the initial complex number
+			function graphRec(x, y) {
+				let coords = [x, y];
+				let iter = 0;
+				bigPoint(...coords, "white");
+				while (dist(coords)<threshold && iter<80 && dist(coords,recurse(...coords,x,y))>0.01) {
+					arrow(...coords, ...recurse(...coords,x,y));
+					coords = recurse(...coords,x,y);
+					iter++;
+				}}
+
+			let increment = inc;
+			let iterations = ite;
+			let threshold = thr;
+
+			let selectedPixel = null;
+			let widthCounter = 0;
+			let prev = null;
+			let fill = null;
+			for (let i = domain[0]; i<domain[1]; i+=increment) {
+				for (let j = range[1]; j>range[0]; j-=increment) {
+					
+					let coords = [i, j];
+
+					for (let k = 0; k<iterations; k++) {
+						coords = recurse(...coords,i,j);
+						if (dist(coords)>threshold) {
+							if (fil==1) {
+								let tmp = 3* k*255/iterations;
+								fill = `rgb(${tmp},${tmp},${tmp})`;
+							}
+
+							else if (fil==0) {fill=null;}
+
+							else {fill = `rgb(${dist(coords)*50},${dist(coords)*50},${dist(coords)*50})`;}
+
+							k=iterations;
+						}
+						else {fill = "black";}
+					}
+
+					if (fill!=null) {
+
+						if (prev!=fill) {
+							selectedPixel = point(i,j,fill);
+							widthCounter = 1;
+						}
+						else if (prev==fill) {
+							widthCounter += increment*rangeScale;
+							selectedPixel.style.height = widthCounter+"px";
+						}
+
+						if (j==range[1]) {fill=null;}
+					}
+
+					prev = fill;
+				}
+			}
+		}
+
+		//document.getElementById("info").style.display = "none";
+		//everything();
+
+		function initialize() {
+			document.getElementById("info").style.display = "none";
+
+			dom = [Number(document.getElementById("domainMin").value), Number(document.getElementById("domainMax").value)];
+			ran = [Number(document.getElementById("rangeMin").value), Number(document.getElementById("rangeMax").value)];
+			domSize = Number(document.getElementById("domSize").value);
+			ranSize = Number(document.getElementById("ranSize").value);
+			domGrid = Number(document.getElementById("domGrid").value);
+			ranGrid = Number(document.getElementById("ranGrid").value);
+			f1 = document.getElementById("f1").value;
+			f2 = document.getElementById("f2").value;
+			inc = Number(document.getElementById("inc").value);
+			thr = Number(document.getElementById("thr").value);
+			ite = Number(document.getElementById("ite").value);
+			fil = Number(document.getElementById("fil").value);
+
+			everything();
+		}
+
+	</script>
+</body>
+</html>
