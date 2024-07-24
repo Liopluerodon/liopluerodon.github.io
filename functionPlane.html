@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Function Plane</title>
+	<link rel="icon" href="Function_Icon.png">
+	<style>
+		body{background:black;}
+		.particle{
+			background: white;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			position: absolute;
+			box-shadow: 0px 0px 40px 10px whitesmoke;
+		}
+		.pixels{
+			width: 2px;
+			pading: 0px 0px 0px 0px;
+			margin: 0px 0px 0px 0px;
+			position: absolute;
+			border: 0px;
+		}
+		#pause{
+			z-index: 1000;
+			position: absolute;
+			top: 10px;
+		}	
+		#grav{
+			z-index: 1000;
+			position: absolute;
+			top: 40px;
+		}	
+		#initvelx{
+			z-index: 1000;
+			position: absolute;
+			top: 70px;
+			width: 50px;
+		}	
+		#initvely{
+			z-index: 1000;
+			position: absolute;
+			top: 100px;
+			width: 50px;
+		}
+		#func{
+			z-index: 1000;
+			position: absolute;
+			top: 130px;
+			width: 50px;
+		}
+		#start{
+			z-index: 1000;
+			position: absolute;
+			top: 160px;
+			width: 50px;
+		}
+	</style>
+</head>
+<body>
+	<button id="pause"onclick="pause()">Pause</button>
+	<button id="grav"onclick="grav()">Gravity</button>
+	<input id="initvelx" placeholder="init x-vel" value=0>
+	<input id="initvely" placeholder="init y-vel" value=0>
+	<input id="func" placeholder="function" value="0.1*x**2">
+	<button id="start" onclick="start()">Start</button>
+	<script type="text/javascript">
+		let origin = [window.screen.width/2-5, 600];
+		let domain = 20;
+		let initvelels = [document.getElementById("initvelx"), document.getElementById("initvely")];
+		let func = "";
+		let running;
+
+		let p = [];
+		let pCt = 0;
+		let fps = 100;
+		let timeScale = 0.02;
+		let g = -9.81;
+
+		let energetic = false;
+		let realistic = !energetic;
+		let energy = 0.2
+
+		function postograph(val) {
+			return [(val[0]-origin[0])*domain/origin[0], (origin[1]-val[1])*domain/origin[0]];
+		}
+
+		function graphtopos(val) {
+			return [origin[0]+val[0]*origin[0]/domain-13, origin[1]-val[1]*origin[0]/domain-35];
+		}
+
+
+		function graph(x, y, left, height, scale, color = "white") {
+		let pixels = [];
+		pixels[x] = document.createElement("p");
+		pixels[x].style.backgroundColor = color;
+		pixels[x].className = "pixels"
+		pixels[x].style.height = window.screen.height-(height-y*scale)-124+"px";
+		pixels[x].style.top = height-y*scale+"px";
+		pixels[x].style.left = scale*x+left+"px";
+		document.body.appendChild(pixels[x]);}
+
+		function f(x) {return eval(func);}
+		function dfdx(x) {return (f(x+0.001)-f(x))/0.001;}
+
+		for (let i = -domain; i<=domain; i+=4*domain/window.screen.width) {
+			graph(i,f(i),origin[0],origin[1],origin[0]/domain,"purple");
+		}
+
+		let create=(e)=>{
+			if (e.clientX>100 || e.clientY>200) {
+			p[pCt] = {
+				pos: postograph([e.clientX+3,e.clientY+15]),
+				vel: [Number(initvelels[0].value), Number(initvelels[1].value)],
+				accel: [0,0],
+				kin: 0,
+				pot: 0,
+				mass: 1,
+				el: document.createElement("p")
+			};
+
+			p[pCt].el.className = "particle";
+			p[pCt].el.style.left = graphtopos(p[pCt].pos)[0]+"px";
+			p[pCt].el.style.top = graphtopos(p[pCt].pos)[1]+"px";
+			document.body.appendChild(p[pCt].el);
+			pCt++;
+		}}
+
+		let run=()=>{
+			for (let i = 0; i<p.length; i++) {
+				p[i].accel[1]=g;
+
+				p[i].pos[0]+=p[i].vel[0]*timeScale;
+				p[i].pos[1]+=p[i].vel[1]*timeScale;
+
+				if (p[i].pos[0]<-20) {p[i].vel[0]*=-1;}
+				if (p[i].pos[0]>20) {p[i].vel[0]*=-1;}
+
+				if (p[i].pos[1]<f(p[i].pos[0])) {
+
+					if (energetic) {
+						let ac = [energy/timeScale * Math.sqrt(p[i].vel[1]**2+p[i].vel[0]**2), 1.57-Math.atan(dfdx(p[i].pos[0]))];
+						p[i].accel[0] = -Math.cos(ac[1])*ac[0];
+						p[i].accel[1] = Math.sin(ac[1])*ac[0];
+						p[i].vel[0]+=p[i].accel[0]*timeScale;
+						p[i].vel[1]+=p[i].accel[1]*timeScale;
+					}
+
+					if (realistic) {
+						let theta = Math.atan(dfdx(p[i].pos[0])); //Angle of slope
+						let velocity = Math.sqrt(p[i].vel[0]**2+p[i].vel[1]**2);
+						let phi = 3.1415+Math.atan2(p[i].vel[1], p[i].vel[0]); //Angle of initial motion
+						let newAngle=2*theta+3.1415-phi
+						p[i].vel[1] = Math.sin(newAngle)*velocity;
+						p[i].vel[0] = Math.cos(newAngle)*velocity;
+					}
+				}
+
+				else {
+					p[i].vel[0]+=p[i].accel[0]*timeScale;
+					p[i].vel[1]+=p[i].accel[1]*timeScale;
+				}
+
+
+				p[i].accel[0]=0;
+				p[i].accel[1]=0;
+				p[i].el.style.left = graphtopos(p[i].pos)[0]+"px";
+				p[i].el.style.top = graphtopos(p[i].pos)[1]+"px";
+
+				p[i].kin = 0.5*p[i].mass*(p[i].vel[0]**2+p[i].vel[1]**2);
+				p[i].pot = p[i].mass*g*p[i].pos[1];
+			}
+		}
+
+		function pause() {
+			if (running!=null) {clearInterval(running); running=null;}
+			else {running = setInterval(run, 1000/fps);}
+		}	
+		
+		function grav() {g = (g==0)?-9.81:0;}
+
+		function start() {
+			func = document.getElementById("func").value;
+			document.getElementById("func").remove();
+			document.getElementById("start").remove();
+
+			for (let i = -domain; i<=domain; i+=4*domain/window.screen.width) {
+				graph(i,f(i),origin[0],origin[1],origin[0]/domain,"purple");
+			}
+
+
+			document.addEventListener("click", create);
+			running = setInterval(run, 1000/fps);
+		}
+
+	</script>
+</body>
+</html>
