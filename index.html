@@ -3,73 +3,324 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Games</title>
+	<title>Newton's Gravity</title>
+	<link rel="icon" href="Gravity_Icon.png">
 	<style>
-		body{background-color: rgb(150,150,150);}
-		h1{
-			font-family: sans-serif;
-			font-size: 40px;
+		body{background:black;}
+		.stats{
+			color: rgb(255,255,255);
 		}
-		p{
-			font-family: sans-serif;
-			font-size: 20px;
-		}
-		#header{
-			t
-		}
-		.container{
-			margin: 40px;
-			border: solid 8px rgb(100,100,100);
-			border-radius: 20px;
-			padding: 40px;
-			width: 660px;
-			left: 20%;
+		#stats{
 			position: absolute;
-		 	text-align: center;
-		 	background-color: lightgray;
-		 	box-shadow: 0px 0px 20px 20px rgb(100,100,100);
+			background-color: rgb(30, 30, 40);
+			border: 2px solid rgb(255,255,255);
+			border-radius: 10px;
+			left: 8px;
+			padding: 0px 15px 15px 15px;
 		}
-		#gridContainer{
-			display: grid;
-			grid-template-columns: 128px 128px 128px 128px;
-			gap: 40px;
-			justify-content: center;
+		.point{
+			position: absolute;
+			padding: 0px 0px 0px 0px;
+			margin: 0px 0px 0px 0px;
+			height: 2px;
+			width: 2px;
+			float: bottom;
+			border: 0px;
 		}
-		.item{
-			border: solid black 2px;
+		.particle{
+			width: 20px;
+			height: 20px;
+			position: absolute;
+			border-radius: 100%;
 		}
-		#gamesContainer{
-			top: 320px;
+		.cent{
+			position: absolute;
+			height: 12px;
+			width: 12px;
+			border-radius: 100%;
+			background-color: rgb(255,255,255);
+		}
+		#inputs{
+			position: absolute;
+			background-color: rgb(30, 30, 40);
+			border: 2px solid rgb(255,255,255);
+			border-radius: 10px;
+			left: 8px;
+			top: 240px;
+			padding: 0px 15px 15px 15px;
+			width: 220px;
+		}
+		input{
+			margin: 10px 5px 5px 0px;
+			font-size: 12px;
+			font-family: sans-serif;
+			font-weight: bold;
+			background-color: rgb(150, 150, 165);
+			border: solid 2px rgb(255, 255, 255);
+			border-radius: 12px;
+			transition: 0.5s;
+		}
+		button{
+			margin: 10px 5px 5px 0px;
+			font-size: 12px;
+			width: 79%;
+			font-family: sans-serif;
+			font-weight: bold;
+			background-color: rgb(220, 220, 235);
+			border: solid 2px rgb(255, 255, 255);
+			border-radius: 12px;
+			transition: 0.5s;
+		}
+		button:hover{
+			translate: 10px;
+		}
+		input:hover{
+			translate: 10px;
 		}
 	</style>
 </head>
 <body>
-	<div id="header" class="container">
-		<h1>Adwaith Praveen</h1>
-		<p>I'm a <strong>programmer</strong> who loves creating with <strong>math</strong> and <strong>science</strong>!</p>
+	<div id="inputs">
+		<input id="mass" placeholder="Mass (kg)" value=1>
+		<input id="speed" placeholder="Speed (m/s)" value=0>
+		<input id="magni" placeholder="Direction (rad)" value=3.14>
+		<input id="colr" placeholder="Color" value=blue>
+		<input id="kin" placeholder="Kinetic Energy Scale" value=1>
+		<input id="track" placeholder="Kinetic Energy of first n Particles" value=0><br>
+		<input id="simspeed" placeholder="Simulation Speed" value=100><br>
+		<button id="collisions" onClick="coll()">Collisions On</button>
+		<button id="button" onClick="pause()">Pause</button>
+		<button id="tracer" onClick="tracing()">Trace</button>
 	</div>
+	<div id="stats">
+		<p class="stats">Simulation Stats:</p>
+		<p class="stats" id="Momentum"></p>
+		<p class="stats" id="Kinetic"></p>
+		<p class="stats" id="Grav"></p>
+		<p class="stats" id="Mech"></p>
+		<a class="stats" href="gravisim.html">Inacurracy (link)</a>
+	</div>
+<script type="text/javascript">
+	let particles = [];
+	let particleElements = [];
+	let particleCount = 0;
+	let centerOfMass = document.createElement("p");
+		centerOfMass.className = "cent";
+		document.body.appendChild(centerOfMass);
+	let softener = 0;
+	let timeScale = 100;
+	let fps = 100;
+	
+	let gravitationalConstant = 6.647*(10**-1);
+	let iter = 0;
+	let vi;
+	let vj;
+	let collide = true;
+	let simulationStats = {
+		kineticEnergy: 0,
+		momentum: {
+			cartesian: [0,0],
+			polar: [0,0]
+		},
+		moment: [0,0],
+		totalMass: 0,
+		centerOfMassPos: [0,0],
+		gravitationalPotentialEnergy: 0,
+		mechanicalEnergy: 0
+	};
+	
+	let hor = document.createElement("p");
+	hor.className = "point";
+	hor.style.backgroundColor = "white";
+	hor.style.width = iter+"px";
+	hor.style.height = "2px";
+	hor.style.top = "1000px";
+	hor.style.left = "0px";
+	document.body.appendChild(hor);
+	
+	function graph(x, y, left, height, color = "white") {
+		let pixels = [];
+		pixels[x] = document.createElement("p");
+		pixels[x].style.backgroundColor = color;
+		pixels[x].className = "point";
+		pixels[x].style.border = "0px ridge "+color;
+		pixels[x].style.top = height-y+"px";
+		pixels[x].style.left = x+left+"px";
+		document.body.appendChild(pixels[x]);}
+		
+	function rounding (roundee,r) {return Math.round(roundee*10**r)/10**r;}
 
-	<div class="container" id="gamesContainer">
-		<h1>Programs:</h1>
-	<div id="gridContainer">
-		<a href="https://liopluerodon.github.io/quadratics.html"><img class="item" src="Quadratic_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/systems.html"><img class="item" src="Systems_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/graphs.html"><img class="item" src="Graphs_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/tables.html"><img class="item" src="Tables_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/newton.html"><img class="item" src="Elastic_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/gravity.html"><img class="item" src="Gravity_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/minesweeper.html"><img class="item" src="Minesweeper_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/popTheLock.html"><img class="item" src="Lock_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/ped.html"><img class="item" src="Ped_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/PerfectCompetition.html"><img class="item" src="Competition_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/conics.html"><img class="item" src="Conics_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/projectile.html"><img class="item" src="Projectile_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/linearRegression.html"><img class="item" src="Linear_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/quadraticRegression.html"><img class="item" src="Polyreg_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/MultivariateRegression.html"><img class="item" src="Multireg_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/fractalGen.html"><img class="item" src="Fractal_Icon.png"></a>
-		<a href="https://liopluerodon.github.io/functionPlane.html"><img class="item" src="Function_Icon.png"></a>
-	</div>
-	</div>
+	gravitate=(p1, p2)=>{
+		let a = particles[p1];
+		let b = particles[p2];
+		let dx = (b.pos[0]-a.pos[0]);
+		let dy = (b.pos[1]-a.pos[1]);
+		let angle = Math.atan2(dy,dx);
+		let distance = Math.sqrt(dx**2+dy**2);
+		simulationStats.gravitationalPotentialEnergy += -gravitationalConstant*a.mass*b.mass/(distance+softener);
+		if (distance > 0) {
+			
+			let forceG = [gravitationalConstant*a.mass*b.mass/(softener**2+distance**2)]
+			forceG[1] = forceG[0]*dx/distance;
+			forceG[2] = forceG[0]*dy/distance;
+			if (distance<40 && !collide) {forceG = [0,0,0];}
+			particles[p1].acceleration[0] += forceG[1]/a.mass;
+			particles[p1].acceleration[1] += forceG[2]/a.mass;
+		}}
+
+	newVelocity = (i,j, u1, u2) => {
+		vi = u1*((particles[i].mass-particles[j].mass)/(particles[i].mass+particles[j].mass))+u2*((2*particles[j].mass)/(particles[j].mass+particles[i].mass));
+		vj = u1*((2*particles[i].mass)/(particles[i].mass+particles[j].mass))+u2*((particles[j].mass-particles[i].mass)/(particles[j].mass+particles[i].mass));}
+
+	collision = (i,j) => {
+		newVelocity(i,j,particles[i].velocity[0],particles[j].velocity[0]);
+		particles[i].velocity[0] = vi;
+		particles[j].velocity[0] = vj;
+		newVelocity(i,j,particles[i].velocity[1],particles[j].velocity[1]);
+		particles[i].velocity[1] = vi;
+		particles[j].velocity[1] = vj;
+		let tmpImag = particles[i].magnitude;
+		particles[i].magnitude = particles[j].magnitude;
+		particles[j].magnitude = tmpImag;
+		
+		
+		particles[i].speed = Math.sqrt(particles[i].velocity[0]**2+particles[i].velocity[1]**2);
+		particles[i].kineticEnergy = (1/2)*(particles[i].mass)*(particles[i].speed**2);
+		
+		particles[j].speed = Math.sqrt(particles[j].velocity[0]**2+particles[j].velocity[1]**2);
+		particles[j].kineticEnergy = (1/2)*(particles[j].mass)*(particles[j].speed**2);}
+
+	create=(e)=>{
+		if (e.clientX>300) {
+			particles[particleCount] = {
+				pos:[e.clientX,600-e.clientY],
+				speed: parseFloat(document.getElementById("speed").value),
+				magnitude: parseFloat(document.getElementById("magni").value),
+				acceleration: [0,0],
+				mass: parseFloat(document.getElementById("mass").value),
+				color: document.getElementById("colr").value};
+
+			particleElements[particleCount] = document.createElement("p");
+			particleElements[particleCount].className = "particle";
+			particleElements[particleCount].style.top = 600-particles[particleCount].pos[1]+"px";
+			particleElements[particleCount].style.left = particles[particleCount].pos[0]+"px";
+			particleElements[particleCount].style.backgroundColor = particles[particleCount].color;
+			particleElements[particleCount].style.boxShadow = "0 0 "+Math.log(particles[particleCount].mass)*20+50+"px "+Math.log(particles[particleCount].mass)*5+5+"px "+particles[particleCount].color;
+			document.body.appendChild(particleElements[particleCount]);
+
+			particles[particleCount].velocity = [particles[particleCount].speed*Math.cos(particles[particleCount].magnitude), particles[particleCount].speed*Math.sin(particles[particleCount].magnitude)];
+			particles[particleCount].kineticEnergy = (1/2)*(particles[particleCount].mass)*(particles[particleCount].speed**2);
+			particles[particleCount].momentum = [particles[particleCount].velocity[0]*particles[particleCount].mass, particles[particleCount].velocity[1]*particles[particleCount].mass];
+
+			particleCount++;
+	}}
+	
+	run=()=>{
+		simulationStats.kineticEnergy = 0;
+		simulationStats.momentum.cartesian = [0,0];
+		simulationStats.momentum.polar = [0,0];
+		simulationStats.moment = [0,0];
+		simulationStats.totalMass = 0;
+		simulationStats.centerOfMassPos = [0,0];
+		simulationStats.gravitationalPotentialEnergy = 0;
+		simulationStats.mechanicalEnergy = 0;
+
+		timeScale = parseFloat(document.getElementById("simspeed").value)
+
+		for (let i = 0; i<particleCount; i++) {
+			for (let j = 0; j < particleCount; j++) {if (i != j) {gravitate(i,j);}}
+		}
+	
+		if (collide) {
+		for (let i = 0; i<particleCount; i++) {
+			for (let j = i+1; j<particleCount; j++) {
+				if (Math.abs(particles[j].pos[0]-particles[i].pos[0]) < 20 && Math.abs(particles[j].pos[1]-particles[i].pos[1]) < 20) {
+					collision(i,j);
+					particles[i].acceleration = [0,0];
+					particles[j].acceleration = [0,0];
+				}
+			}
+		}
+		}
+
+		for (let i = 0; i<particleCount; i++) {
+			let subj = particles[i];
+			
+			subj.velocity[0] += subj.acceleration[0]*timeScale/fps;
+			subj.velocity[1] += subj.acceleration[1]*timeScale/fps;
+			
+			subj.pos[0] += subj.velocity[0]*timeScale/fps;
+			subj.pos[1] += subj.velocity[1]*timeScale/fps;
+
+			particleElements[i].style.top = 600-particles[i].pos[1]-25+"px";
+			particleElements[i].style.left = particles[i].pos[0]-9+"px";
+
+			subj.speed = Math.sqrt(subj.velocity[0]**2+subj.velocity[1]**2);
+			subj.kineticEnergy = (1/2)*(subj.mass)*(subj.speed**2);
+			subj.momentum = [subj.velocity[0]*subj.mass, subj.velocity[1]*subj.mass]
+			subj.magnitude = Math.atan2(subj.velocity[1],subj.velocity[0]);
+
+			subj.acceleration = [0,0];
+			
+			if (trace) {graph (...subj.pos, 0, 600, particles[i].color);}
+			
+			simulationStats.kineticEnergy += subj.kineticEnergy;
+			simulationStats.momentum.cartesian[0] += subj.momentum[0];
+			simulationStats.momentum.cartesian[1] += subj.momentum[1];
+			simulationStats.moment[0]+=particles[i].mass*particles[i].pos[0];
+			simulationStats.moment[1]+=particles[i].mass*particles[i].pos[1];
+			simulationStats.totalMass+=particles[i].mass;
+		}
+		
+		simulationStats.gravitationalPotentialEnergy/=2;
+		simulationStats.mechanicalEnergy = simulationStats.gravitationalPotentialEnergy + simulationStats.kineticEnergy;
+		
+		simulationStats.momentum.polar[0] = Math.sqrt(simulationStats.momentum.cartesian[0]**2+simulationStats.momentum.cartesian[1]**2);
+		simulationStats.momentum.polar[1] = Math.atan2(simulationStats.momentum.cartesian[1], simulationStats.momentum.cartesian[0]);
+
+		
+		simulationStats.centerOfMassPos = [simulationStats.moment[0]/simulationStats.totalMass, simulationStats.moment[1]/simulationStats.totalMass];
+		centerOfMass.style.top = 600-simulationStats.centerOfMassPos[1]-20+"px";
+		centerOfMass.style.left = simulationStats.centerOfMassPos[0]-4+"px";
+		
+
+		document.getElementById("Momentum").textContent = "Momentum: "+rounding(simulationStats.momentum.polar[0],2)+"kgm/s";		
+		document.getElementById("Kinetic").textContent = "Kinetic Energy: "+rounding(simulationStats.kineticEnergy,2)+"J";
+		document.getElementById("Grav").textContent = "Gravitational Potential Energy: "+rounding(simulationStats.gravitationalPotentialEnergy,2)+"J";
+		document.getElementById("Mech").textContent = "Mechanical Energy: "+rounding(simulationStats.mechanicalEnergy,2)+"J";
+		
+		if (document.getElementById("track").value>-1 && particleCount > 1) { 
+		graph(iter, simulationStats.kineticEnergy*document.getElementById("kin").value, 0, 1000);
+		hor.style.width = iter+"px";}
+		for (let i = 0; i < document.getElementById("track").value; i++) {if (particleCount > i) {graph(iter, particles[i].kineticEnergy*document.getElementById("kin").value, 0, 1000, particles[i].color);}}
+		iter++;}
+
+		let paused = false;
+		let but = document.getElementById("button");
+		
+		function pause(){
+			but.textContent = paused?"Pause":"Play";
+			if (!paused) {clearInterval(running);}			
+			else {running = setInterval(run,10);}
+			paused = paused?false:true
+		};
+		
+		let colbutt = document.getElementById("collisions");
+		
+		function coll(){
+			colbutt.textContent = collide?"Collisions Off":"Collisions On";
+			softener = collide?0:0;
+			collide = collide?false:true;
+		};
+		
+		let trace = false;
+		let tracer = document.getElementById("tracer");
+		
+		function tracing(){trace = trace?false:true;}
+		
+		document.addEventListener("click", create);
+		let running = setInterval(run,1000/fps);
+		running;
+</script>
 </body>
 </html>
