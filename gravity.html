@@ -7,13 +7,16 @@
 	<link rel="icon" href="Gravity_Icon.png">
 	<style>
 		body{background:black;}
-		.stats{color: rgb(255,255,255);}
+		.stats{
+			color: rgb(255,255,255);
+		}
 		#stats{
 			position: absolute;
-			border: 4px ridge rgb(255,255,255);
-			top: 35px;
+			background-color: rgb(30, 30, 40);
+			border: 2px solid rgb(255,255,255);
+			border-radius: 10px;
 			left: 8px;
-			padding: 0px 10px 10px 10px;
+			padding: 0px 15px 15px 15px;
 		}
 		.point{
 			position: absolute;
@@ -37,25 +40,65 @@
 			border-radius: 100%;
 			background-color: rgb(255,255,255);
 		}
+		#inputs{
+			position: absolute;
+			background-color: rgb(30, 30, 40);
+			border: 2px solid rgb(255,255,255);
+			border-radius: 10px;
+			left: 8px;
+			top: 240px;
+			padding: 0px 15px 15px 15px;
+			width: 220px;
+		}
+		input{
+			margin: 10px 5px 5px 0px;
+			font-size: 12px;
+			font-family: sans-serif;
+			font-weight: bold;
+			background-color: rgb(150, 150, 165);
+			border: solid 2px rgb(255, 255, 255);
+			border-radius: 12px;
+			transition: 0.5s;
+		}
+		button{
+			margin: 10px 5px 5px 0px;
+			font-size: 12px;
+			width: 79%;
+			font-family: sans-serif;
+			font-weight: bold;
+			background-color: rgb(220, 220, 235);
+			border: solid 2px rgb(255, 255, 255);
+			border-radius: 12px;
+			transition: 0.5s;
+		}
+		button:hover{
+			translate: 10px;
+		}
+		input:hover{
+			translate: 10px;
+		}
 	</style>
 </head>
 <body>
-	<input id="mass" placeholder="mass in kg" value=1>
-	<input id="speed" placeholder="speed in m/s" value=0>
-	<input id="magni" placeholder="magnitude in radians" value=3.14>
-	<input id="colr" placeholder="color" value=blue>
-	<input id="kin" placeholder="kinetic energy graph scaler" value=1>
-	<input id="track" placeholder="track the first n particles" value=0>
-	<button id="collisions" onClick="coll()">Collisions On</button>
-	<button id="button" onClick="pause()">Pause</button>
-	<button id="tracer" onClick="tracing()">Trace</button>
+	<div id="inputs">
+		<input id="mass" placeholder="Mass (kg)" value=1>
+		<input id="speed" placeholder="Speed (m/s)" value=0>
+		<input id="magni" placeholder="Direction (rad)" value=3.14>
+		<input id="colr" placeholder="Color" value=blue>
+		<input id="kin" placeholder="Kinetic Energy Scale" value=1>
+		<input id="track" placeholder="Kinetic Energy of first n Particles" value=0><br>
+		<input id="simspeed" placeholder="Simulation Speed" value=100><br>
+		<button id="collisions" onClick="coll()">Collisions On</button>
+		<button id="button" onClick="pause()">Pause</button>
+		<button id="tracer" onClick="tracing()">Trace</button>
+	</div>
 	<div id="stats">
 		<p class="stats">Simulation Stats:</p>
 		<p class="stats" id="Momentum"></p>
 		<p class="stats" id="Kinetic"></p>
 		<p class="stats" id="Grav"></p>
 		<p class="stats" id="Mech"></p>
-		<a class="stats" href="https://liopluerodon.github.io/gravisim.html">Inacurracy (link)</a>
+		<a class="stats" href="gravisim.html">Inacurracy (link)</a>
 	</div>
 <script type="text/javascript">
 	let particles = [];
@@ -148,7 +191,7 @@
 		particles[j].kineticEnergy = (1/2)*(particles[j].mass)*(particles[j].speed**2);}
 
 	create=(e)=>{
-		if (e.clientX>1400 || e.clientY>30) {
+		if (e.clientX>300) {
 			particles[particleCount] = {
 				pos:[e.clientX,600-e.clientY],
 				speed: parseFloat(document.getElementById("speed").value),
@@ -181,6 +224,8 @@
 		simulationStats.centerOfMassPos = [0,0];
 		simulationStats.gravitationalPotentialEnergy = 0;
 		simulationStats.mechanicalEnergy = 0;
+
+		timeScale = parseFloat(document.getElementById("simspeed").value)
 
 		for (let i = 0; i<particleCount; i++) {
 			for (let j = 0; j < particleCount; j++) {if (i != j) {gravitate(i,j);}}
