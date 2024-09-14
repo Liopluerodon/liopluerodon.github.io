@@ -4,21 +4,51 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Games</title>
+	<link rel="icon" href="https://th.bing.com/th/id/OIP.3l8x1oJkEOw87VUudQenDgAAAA?">
 	<style>
-		body{background-color: silver;}
+		body{
+			background-color: rgb(20,20,30);
+		}
 		#gridContainer{
 			display: grid;
 			grid-template-columns: 128px 128px 128px 128px;
 			gap: 40px;
-			justify-content: center;
 		}
+		.container{
+			justify-content: center;
+			background: radial-gradient(rgb(80, 80, 100), rgb(255,255,255,0.1));
+			padding: 20px;
+			border: 2px solid rgb(255, 255, 255);
+			width: 50%;
+			margin: auto;
+			position: relative;
+			transition: 1s;
+		}
+
 		.item{
 			border: solid black 2px;
+			transition: 0.2s;
+		}
+		.item:hover{
+			scale: 110%;
+		}
+		#heading{
+			margin-bottom: 20px;
+			font-size: 80px;
+			font-family: sans-serif;
+			text-align: center;
+			color: white;
+			font-weight: bold;
 		}
 	</style>
 </head>
 <body>
-	<div id="gridContainer">
+	<div id="heading" class="container">
+		Games
+	</div>
+
+
+	<div id="gridContainer" class="container">
 		<a href="quadratics.html"><img class="item" src="Quadratic_Icon.png"></a>
 		<a href="systems.html"><img class="item" src="Systems_Icon.png"></a>
 		<a href="graphs.html"><img class="item" src="Graphs_Icon.png"></a>
