@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciber Lunes</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #000000;
+            font-size: 20px;
+            background-image: url("starrySky.png");
+        }
+
+        header {
+            margin: 20px;
+            text-align: center;
+        }
+
+        #grid-container {
+            display: flex;
+            flex-wrap: wrap;
+            width: 80vw;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .grid-item {
+            flex: 1 0 calc(33.333% - 10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, 
+                rgb(150, 250, 250, 0.65) 40%, 
+                rgb(200, 250, 250, 0.65) 45%, 
+                rgb(150, 250, 250, 0.65) 50%, 
+                rgb(200, 250, 250, 0.65) 65%, 
+                rgb(150, 250, 250, 0.65) 100%);
+            font-size: 20px;
+            padding: 5px;
+            text-align: center;
+            border-radius: 20px;
+            color: rgb(20, 40, 40);
+        }
+
+        .grid-item button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            color: #FF3B3F;
+            font-size: 15px;
+            border: 2px solid #A9A9A9;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #balance {
+            font-size: 24px;
+            margin: 20px;
+        }
+
+        p{
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        img{
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <h1>Lunes Cibernetico Simulador</h1>
+        <p id="balance">Dinero: €100,000</p>
+        <div id="inventory" class="grid-item">Compras:</div>
+    </header>
+    <div id="grid-container">
+    </div>
+    <script>
+        let header = document.getElementById("header");
+        let t = 0;
+        let balance = 50000;
+        let grid = document.getElementById("grid-container");
+        let gridItems = [];
+        let products = [];
+        let inventoryList = document.getElementById("inventory")
+        let inventory = {
+
+        }
+
+        function createItem(name, price) {
+            let item = document.createElement("div");
+            item.className = "grid-item";
+            grid.appendChild(item);
+            gridItems.push(item);
+
+            let p1 = document.createElement("p");
+            p1.textContent = name;
+            item.appendChild(p1);
+
+            let p2 = document.createElement("p");
+            p2.textContent = "Precio: €"+price.toLocaleString();
+            item.appendChild(p2);
+
+            let pic = document.createElement("img");
+            pic.src = name+".png";
+            item.appendChild(pic);
+
+            let button = document.createElement("button")
+            button.onclick = function() {buyItem(price, name);};
+            button.textContent = "Comprar";
+            item.appendChild(button);
+
+            inventory[name] = 0;
+            products.push(name);}
+
+        createItem("Carro", 40000)
+        createItem("Computadora Portatil", 1000)
+        createItem("Reloj (Rolex)", 5000)
+        createItem("Minecraft", 30)
+        createItem("Viaje a Espana", 5000)
+        createItem("Telefono Celular", 800)
+        createItem("Manzana", 1)
+        createItem("Barra de oro", 8500)
+        createItem("Brawl Pass +", 10)
+        createItem("Cancha de Baloncesto", 1200)
+        createItem("ChatGPT Premium (1 mes)", 20)
+        createItem("RGB Monitor", 1000)
+
+        function buyItem(price, name) {
+            if (balance >= price) {
+                balance -= price;
+                document.getElementById('balance').textContent = `Balance: $${balance.toLocaleString()}`;
+                inventory[name]++;
+
+                let inventoryString = "Compras: "
+                for (let i = 0; i<products.length; i++) {
+                    if (inventory[products[i]]!=0) {
+                        inventoryString += ("<br> "+products[i]+": "+inventory[products[i]]);
+                    }
+                }
+
+                inventoryList.innerHTML = inventoryString;
+
+            } 
+
+            else {
+                alert("Necesitas Dinero");
+            }
+        }
+
+        function run() {
+            t++;
+            header.style.transform = `translate(0px, ${10*Math.sin(t/50)}px)`;
+            header.style.color = `rgb(${125+125*Math.sin(t/20)}, ${125-125*Math.sin(t/20)}, ${125+125*Math.cos(t/20)})`
+
+            for (let i = 0; i<gridItems.length; i++) {
+                gridItems[i].style.border = `2px solid rgb(${125+125*Math.sin(t/20)}, ${125-125*Math.sin(t/20)}, ${125+125*Math.cos(t/20)})`;
+            }
+        }
+
+        let running = setInterval(run, 10);
+    </script>
+</body>
+</html>
