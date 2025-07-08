@@ -12,22 +12,10 @@
 			background-color: rgb(200,200,200);
 			color: rgb(50,50,50);
 		}
-		.point{
-			width: 1px;
-			height: 1px;
-		}
+
 		.bigPoint{
 			width: 4px;
 			height: 4px;
-		}
-		.pixels{
-			width: 2px;
-			height: 2px;
-			pading: 0px 0px 0px 0px;
-			margin: 0px 0px 0px 0px;
-			float: bottom;
-			position: absolute;
-			border: 0px;
 		}
 		.arrow{
 			line-height: 1px;
@@ -83,6 +71,12 @@
 			border: solid 8px black;
 			border-radius: 20px;
 		}
+
+		.canvasElement{
+			background-color: rgb(50,50,50);
+			border: solid 1px rgb(200,200,200);
+			position: absolute;
+		}
 	</style>
 </head>
 <body>
@@ -129,17 +123,17 @@
 			<input id="f2" placeholder="Y-output" value="2*a*b+d">
 			<h2>
 				This is the most important part: The Recursive Function. It accepts 4 inputs: <strong>a</strong> and <strong>b</strong>, which are the coordinates of the previous iteration of the function (initially equal to <strong>c</strong> and <strong>d</strong> in the first iteration), and <strong>c</strong> and <strong>d</strong>, which are the inital coordinates of the function. Basically, at point (<strong>c</strong>,<strong>d</strong>), the program plugs in the coordinate to the function and is returned a new coordinate. This new coordinate is again plugged into the function as <strong>a</strong> and <strong>b</strong>, which along with the original <strong>c</strong> and <strong>d</strong> are combined to get a new point, upon which the cycle repeats. <strong>NOTE</strong>: The mandelbrot set generally uses an initial value of (0,0) for (<strong>a</strong>,<strong>b</strong>), but this method produces the same shape. To generate a julia set corresponding to (<strong>c</strong>,<strong>d</strong>), replace (<strong>c</strong>,<strong>d</strong>) in the preset formulas with the specific values.
+				<br><br>
+				You might be more used to seeing fractals generated through imaginary values. Z<sub>n</sub> = f(Z<sub>n-1</sub>, Z<sub>0</sub>). In this format, the equation for the mandelbrot is Z<sub>n</sub> = (Z<sub>n-1</sub>)<sup>2</sup> + Z<sub>0</sub>. However, javascript doesn't natively support imaginary numbers. Instead, we define a and b, where a+bi=Z<sub>n-1</sub>, and we define c and d where c+di = Z<sub>0</sub>. Then the two function inputs are just the real part and imaginary part of the full complex function f(Z<sub>n-1</sub>, Z<sub>0</sub>). Finding the real and imaginary part of a complex function can be tricky, but for the mandelbrot function, it is easy and is seen above (The real part provides the x-output and imaginary part provides the y-output). If you want to keep the complex nature of fractals, you can imagine that a = Re(Z<sub>n-1</sub>) and so on.
 			</h2>
 		</div>	
 
 		<div class="box">
 			<h1>Parameters:</h1>
-			<input id="inc" placeholder="Increment" value="0.002"> 
 			<input id="thr" placeholder="Threshold" value="2">
 			<input id="ite" placeholder="Iterations" value="50">
 			<h2>
-				These values dictate how the function is applied. Increment is the gap between each coordinate the program applies the function to. If this value is too big, the graph will have gaps. Too small, the the program takes longer without any improvement is visual quality. Only increase when the size of the graph increases, and DO NOT make the size of the graph too big or the program will take an unfeasible amount of time to run.<br><br>
-				Threshold is the minimum distance for which the program decides that the coordinate has diverged and doesn't need to be recursed on anymore. For example, if threshold is 5 and at a coordinate the function returns (6,0), the program will stop iterating the function, graph the point, and continue.<br><br>
+				These values dictate how the function is applied. Threshold is the minimum distance for which the program decides that the coordinate has diverged and doesn't need to be recursed on anymore. For example, if threshold is 5 and at a coordinate the function returns (6,0), the program will stop iterating the function, graph the point, and continue.<br><br>
 				Iterations is the amount of times the program is run on a point. The more iterations, the more accurately the program will be able to check if a point diverges or not. When zoomed in, it is generally necessary to increase this value. However, this is another computationally intensive value, so don't go overboard.
 			</h2>
 		</div>
@@ -152,10 +146,18 @@
 			</h2>
 		</div>
 
+		<div class="box">
+			<h1>Bonus</h1>
+			<h2>
+				If you hold your mouse and move it around, you will see the point returned by each iteration of the recursion. For places in the fractal, there will either be infinite oscillation or the iterations will converge to a single point. For places outside the fractal, the iterations diverge (return increasingly far-off points).
+				<br><br>
+				If you put your mouse over an area and press z, the graph automatically zooms into that area
+			</h2>
+		</div>
 		<button id="runIt" onclick="initialize()">Generate the Graph! (give it some time to load)</button>
 	</div>
 	<script>
-
+		let texts = [];
 		let dom = [-2,1];
 		let ran = [-1,1];
 		let domSize = 480;
@@ -164,7 +166,6 @@
 		let ranGrid = 1/2;
 		let f1 = "a**2-b**2+c";
 		let f2 = "2*a*b+d";
-		let inc = 0.002;
 		let thr = 2;
 		let ite = 50;
 		let fil = 1;
@@ -184,39 +185,40 @@
 			//For now, make sure the domain axes is a factor of the domain, and same with range
 			let origin = [100+Math.abs(domain[0])*domainScale,100+Math.abs(range[1])*rangeScale];
 
+			let canvas = document.createElement("canvas");
+			canvas.className = "canvasElement";
+			document.body.appendChild(canvas)
+			let ctx = canvas.getContext("2d");
+			canvas.width = (domain[1]-domain[0])*domainScale;
+			canvas.height = (range[1]-range[0])*rangeScale;
+			canvas.style.left = "100px";
+			canvas.style.top = "110px";
+			let canvasOrigin = [Math.abs(domain[0])*domainScale, Math.abs(range[1])*rangeScale];
+			//to convert something from a coordinate (a,b) to a location on canvas (relative to top left corner), I'd need to do something akin to (a,b) -> (canvasOrigin[0]+a*domainScale, canvasOrigin[1]-b*rangeScale), and the important part would just be ensuring that domain and range scale work the same
+
+			
+			//This stuff is all for pixel-perfect rendering... so no blur
+			/*const dpr = window.devicePixelRatio || 1;
+			canvas.width =  (domain[1]-domain[0])*domainScale * dpr;
+			canvas.height = (range[1]-range[0])*rangeScale * dpr;
+			ctx.scale(dpr, dpr);
+			*/
+
+
+
+
 			function line(horizontal, offset, start, end, thickness) {
-				let temp = document.createElement("p");
+				ctx.fillStyle = `rgb(200, 200, 200)`;
 				if (!horizontal) {
-					temp.style.left = offset*domainScale+origin[0]+"px";
-					temp.style.top = origin[1]-start*rangeScale+"px";
-					temp.style.width = thickness+"px";
-					temp.style.height = Math.abs((origin[1]-end*rangeScale)-(origin[1]-start*rangeScale))+"px";
-				}	
-				if (horizontal) {
-					temp.style.left = origin[0]+start*domainScale+"px";
-					temp.style.top = origin[1]-offset*rangeScale+"px";
-					temp.style.width = (end-start)*domainScale+"px";
-					temp.style.height = thickness+"px";
+				   	ctx.fillRect(canvasOrigin[0]+offset*domainScale, canvasOrigin[1]-end*rangeScale, thickness, rangeScale*(end-start));
 				}
-				document.body.appendChild(temp);}
-
-			function graph(x, y, left, height, color = "white") {
-			let pixels = [];
-			pixels[x] = document.createElement("p");
-			pixels[x].style.backgroundColor = color;
-			pixels[x].className = "pixels"
-			pixels[x].style.top = height-y+"px";
-			pixels[x].style.left = x+left+"px";
-			document.body.appendChild(pixels[x]);}
-
-			function point(x,y, color="black") {
-				let temp = document.createElement("p");
-				temp.className = "point";
-				temp.style.left = origin[0]+x*domainScale+"px";
-				temp.style.top = origin[1]-y*rangeScale+"px";
-				temp.style.backgroundColor = color;
-				document.body.appendChild(temp);
-				return temp;}
+				if (horizontal) {
+				   	ctx.fillRect(canvasOrigin[0]+start*domainScale, canvasOrigin[1]-offset*rangeScale, domainScale*(end-start), thickness);
+				}}
+			
+			function point(x, y, color="rgb(0,0,0)") {
+				ctx.fillStyle = color;
+				ctx.fillRect(canvasOrigin[0]+x*domainScale, canvasOrigin[1]-y*rangeScale, 1, 1);}
 
 			function bigPoint(x,y, color="black") {
 				let temp = document.createElement("p");
@@ -240,7 +242,6 @@
 				let magnitude = Math.sqrt((dx)**2+(dy)**2);
 				let newMag = magnitude*(rangeShift*domainShift)/Math.sqrt((rangeShift*Math.cos(degree))**2+(domainShift*Math.sin(degree))**2);
 				let tmp = document.createElement("p");
-				//tmp.textContent = "→";
 				tmp.className = "arrow";
 				tmp.style.position = "absolute";
 				tmp.style.left = origin[0]+x1*domainScale+"px";
@@ -248,21 +249,62 @@
 				tmp.style.transform = `rotate(${-1*degree}rad) scaleX(${newMag})`;
 				document.body.appendChild(tmp);}
 
+
 			line(false, 0, range[1], range[0], 2);
 			line(true, 0, domain[0], domain[1], 2);
 
-			for (let i = domain[0]; i <= domain[1]; i+=domainAxes) {line(false, i, range[1], range[0], 1);}
-			for (let i = range[0]; i <= range[1]; i+=rangeAxes) {line(true, i, domain[0], domain[1], 1);}
-
-			text(". "+range[0]+"i .", origin[0]-16, origin[1]-range[0]*rangeScale+5);
-			text(". "+range[1]+"i .", origin[0]-16, origin[1]-range[1]*rangeScale-25);
-			text(". "+domain[1]+" .", origin[0]+domain[1]*domainScale+5, origin[1]-5);
-			text(". "+domain[0]+" .", origin[0]+domain[0]*domainScale-55, origin[1]-5);
+			for (let i = domain[0]; i<=domain[1]; i+=domainAxes) {line(false, i, range[1], range[0], 1);}
+			for (let i = range[0]; i<=range[1]; i+=rangeAxes) {line(true, i, domain[0], domain[1], 1);}
 
 			function getCoords(event) {
 				graphRec((event.pageX-origin[0])/domainScale, -(event.pageY-origin[1]-17)/rangeScale);
 			}
-			document.addEventListener('click', function() {getCoords(event);}),10;
+
+			let isMouseDown = false;
+			document.addEventListener('mousedown', () => {isMouseDown = true;});
+			document.addEventListener('mouseup', () => {isMouseDown = false;});
+
+			let mouseX = 0;
+    		let mouseY = 0;
+
+			document.addEventListener('mousemove', function() {
+				mouseX = (event.pageX-origin[0])/domainScale;
+				mouseY = -(event.pageY-origin[1]-17)/rangeScale;
+
+				if (!isMouseDown) {
+	 				let remove = document.getElementsByClassName('arrow');
+					while(remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+					remove = document.getElementsByClassName('bigPoint');
+					while(remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+				}
+
+				if (isMouseDown) {getCoords(event);}
+			});
+
+			document.addEventListener('keypress', function(event) {
+				if(event.key=="z"){
+					dom = [mouseX-(dom[1]-dom[0])/8, mouseX+(dom[1]-dom[0])/8];
+					ran = [mouseY-(ran[1]-ran[0])/8, mouseY+(ran[1]-ran[0])/8];
+					domSize*=4;
+					ranSize*=4;
+					ite+=50;
+
+					domain = dom;
+					range = ran;
+					domainScale = domSize
+					rangeScale = ranSize
+					iterations = ite;
+
+					domainShift = domainScale/40;
+					rangeShift = rangeScale/40;
+					spatialRatio = rangeScale/domainScale; //Ratio between domain size and range size
+					origin = [100+Math.abs(domain[0])*domainScale,100+Math.abs(range[1])*rangeScale];
+					canvasOrigin = [Math.abs(domain[0])*domainScale, Math.abs(range[1])*rangeScale];
+					let tmp = document.body.getElementsByClassName('p');
+					while(tmp[0]) {tmp[0].parentNode.removeChild(tmp[0]);}
+					graph();
+				}
+			})
 
 			function dist(m,n=[0,0]) {return Math.sqrt((m[0]-n[0])**2+(m[1]-n[1])**2);}
 			function recurse(a,b,c,d) {return [eval(f1), eval(f2)];} 
@@ -271,6 +313,12 @@
 			function graphRec(x, y) {
 				let coords = [x, y];
 				let iter = 0;
+
+				let remove = document.getElementsByClassName('arrow');
+				while(remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+				remove = document.getElementsByClassName('bigPoint');
+				while(remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+
 				bigPoint(...coords, "white");
 				while (dist(coords)<threshold && iter<80 && dist(coords,recurse(...coords,x,y))>0.01) {
 					arrow(...coords, ...recurse(...coords,x,y));
@@ -278,57 +326,50 @@
 					iter++;
 				}}
 
-			let increment = inc;
 			let iterations = ite;
 			let threshold = thr;
 
-			let selectedPixel = null;
-			let widthCounter = 0;
-			let prev = null;
-			let fill = null;
-			for (let i = domain[0]; i<domain[1]; i+=increment) {
-				for (let j = range[1]; j>range[0]; j-=increment) {
-					
-					let coords = [i, j];
+			function graph() {
+				texts[0].textContent = ". "+range[0]+"i .";
+				texts[1].textContent = ". "+range[1]+"i .";
+				texts[2].textContent = ". "+domain[1]+"i .";
+				texts[3].textContent = ". "+domain[0]+"i .";
 
-					for (let k = 0; k<iterations; k++) {
-						coords = recurse(...coords,i,j);
-						if (dist(coords)>threshold) {
-							if (fil==1) {
-								let tmp = 3* k*255/iterations;
-								fill = `rgb(${tmp},${tmp},${tmp})`;
+
+				let selectedPixel = null;
+				let widthCounter = 0;
+				let prev = null;
+				let fill = null;
+				for (let i = domain[0]; i<domain[1]; i+=1/domainScale) {
+					for (let j = range[1]; j>range[0]; j-=1/rangeScale) {
+						
+						let coords = [i, j];
+
+						for (let k = 0; k<iterations; k++) {
+							coords = recurse(...coords,i,j);
+							if (dist(coords)>threshold) {
+								if (fil==1) {
+									let tmp = 3* k*255/iterations;
+									fill = `rgb(${tmp},${tmp},${tmp})`;
+								}
+
+								else if (fil==0) {fill=null;}
+
+								else {fill = `rgb(${dist(coords)*50},${dist(coords)*50},${dist(coords)*50})`;}
+								k=iterations;
 							}
-
-							else if (fil==0) {fill=null;}
-
-							else {fill = `rgb(${dist(coords)*50},${dist(coords)*50},${dist(coords)*50})`;}
-
-							k=iterations;
+							else {fill = "rgb(0,0,0)";}
 						}
-						else {fill = "black";}
+
+						if (fill!=null) {
+							point(i,j,fill);
+						}
 					}
-
-					if (fill!=null) {
-
-						if (prev!=fill) {
-							selectedPixel = point(i,j,fill);
-							widthCounter = 1;
-						}
-						else if (prev==fill) {
-							widthCounter += increment*rangeScale;
-							selectedPixel.style.height = widthCounter+"px";
-						}
-
-						if (j==range[1]) {fill=null;}
-					}
-
-					prev = fill;
 				}
 			}
-		}
 
-		//document.getElementById("info").style.display = "none";
-		//everything();
+			graph();
+		}
 
 		function initialize() {
 			document.getElementById("info").style.display = "none";
@@ -341,10 +382,32 @@
 			ranGrid = Number(document.getElementById("ranGrid").value);
 			f1 = document.getElementById("f1").value;
 			f2 = document.getElementById("f2").value;
-			inc = Number(document.getElementById("inc").value);
 			thr = Number(document.getElementById("thr").value);
 			ite = Number(document.getElementById("ite").value);
 			fil = Number(document.getElementById("fil").value);
+
+
+			texts[0] = document.createElement("p");
+			texts[0].style.top = 100+Math.abs(dom[1]-dom[0])*domSize+"px";
+			texts[0].style.left = 100+Math.abs(ran[1])*ranSize+"px";
+			document.body.appendChild(texts[0]);
+
+			texts[1] = document.createElement("p");
+			texts[1].style.top = 60+"px";
+			texts[1].style.left = 100+Math.abs(ran[1])*ranSize+"px";
+			document.body.appendChild(texts[1]);
+
+
+			texts[2] = document.createElement("p");
+			texts[2].style.top = ranSize*(ran[1]-ran[0])/2+90+"px";
+			texts[2].style.left = 100+Math.abs(dom[1]-dom[0])*domSize+"px";
+			document.body.appendChild(texts[2]);
+
+			texts[3] = document.createElement("p");
+			texts[3].style.top = ranSize*(ran[1]-ran[0])/2+90+"px";
+			texts[3].style.left = 60+"px";
+			document.body.appendChild(texts[3]);
+
 
 			everything();
 		}
