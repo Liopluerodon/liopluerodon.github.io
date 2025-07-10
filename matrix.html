@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Matrices</title>
+	<style>
+		body{
+			background-color: rgb(50, 50, 50);
+		}
+		p{
+			position: absolute;
+			background-color: rgb(200,200,200);
+			color: rgb(50,50,50);
+		}
+
+		.bigPoint{
+			width: 6px;
+			height: 6px;
+		}
+		.arrow{
+			line-height: 1px;
+			height: 1px;
+			width: 40px;
+			transform-origin: center left;
+			color: white;
+		}
+
+		.canvasElement{
+			background-color: rgb(50,50,50);
+			border: solid 1px rgb(200,200,200);
+			position: absolute;
+		}
+
+
+		#matrix{
+			margin-left: auto;
+			margin-right: auto;
+			border: ridge 16px black;
+			background-color: lightgray;
+			width: 360px;
+			height: 500px;
+			padding: 30px;
+			font-size: 50px;
+			text-align: center;
+			margin-bottom: 20px;
+			position: absolute;
+			top: 100px;
+			left: 60%;
+		}
+
+		input{
+			height: 120px;
+			margin: 10px;
+			font-size: 20px;
+			text-align: center;
+			width: 120px;
+		}
+
+		#info{
+			font-size: 20px;
+		}
+
+	</style>
+</head>
+<body>
+
+	<div id="matrix">
+		<input id="topleft" class="value" value="1">
+		<input id="topright" class="value" value="0">
+		<br>
+		[&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp]
+		<br>
+		<input id="bottomleft" class="value" value="0">
+		<input id="bottomright" class="value" value="1">
+		<br><br>
+		<div id="info">
+			<div id="eigenvalue1">Eigenvalue 1 = </div>
+			<div id="eigenvalue2">Eigenvalue 2 = </div>
+			<div id="area">Quadrilateral Area = </div>
+		</div>
+
+	</div>
+
+	<button id="state" onclick="switchmode()">
+		Eigenvector Mode
+	</button>
+	<script>
+		let stateButton = document.getElementById("state");
+		let state = 0 
+			//0 - Eigenmode
+			//1 - Shape Mode
+
+		let ev1el = document.getElementById("eigenvalue1")
+		let ev2el = document.getElementById("eigenvalue2")
+		let areael = document.getElementById("area")
+
+		let domain = [-10,10];
+		let range = [-10,10];
+		//Scale is how much space an integer takes up (a scale of 1 means y=2 is one pixel wide)
+		let domainScale = 30;
+		let rangeScale = 30;
+		let domainShift = domainScale/40;
+		let rangeShift = rangeScale/40;
+		let spatialRatio = rangeScale/domainScale; //Ratio between domain size and range size
+		//Axes is the the numerical (not spatial) gap between axes
+		let domainAxes = 1;
+		let rangeAxes = 1;
+		//For now, make sure the domain axes is a factor of the domain, and same with range
+		let origin = [102+Math.abs(domain[0])*domainScale,85+Math.abs(range[1])*rangeScale];
+
+		let canvas = document.createElement("canvas");
+		canvas.className = "canvasElement";
+		document.body.appendChild(canvas)
+		let ctx = canvas.getContext("2d");
+		canvas.width = (domain[1]-domain[0])*domainScale;
+		canvas.height = (range[1]-range[0])*rangeScale;
+		canvas.style.left = "100px";
+		canvas.style.top = "100px";
+		let canvasOrigin = [Math.abs(domain[0])*domainScale, Math.abs(range[1])*rangeScale];
+
+
+
+		function switchmode() {
+			state++;
+			if (state>1) {state = 0;}
+			if (state==0) {stateButton.textContent = "Eigenvector Mode";}
+			if (state==1) {stateButton.textContent = "Shape Mode";}
+		}
+
+		function line(horizontal, offset, start, end, thickness) {
+			ctx.fillStyle = `rgb(200, 200, 200)`;
+			if (!horizontal) {
+			   	ctx.fillRect(canvasOrigin[0]+offset*domainScale, canvasOrigin[1]-end*rangeScale, thickness, rangeScale*(end-start));
+			}
+			if (horizontal) {
+			   	ctx.fillRect(canvasOrigin[0]+start*domainScale, canvasOrigin[1]-offset*rangeScale, domainScale*(end-start), thickness);
+			}}
+		
+		function point(x, y, color="rgb(0,0,0)") {
+			ctx.fillStyle = color;
+			ctx.fillRect(canvasOrigin[0]+x*domainScale, canvasOrigin[1]-y*rangeScale, 1, 1);}
+
+		function bigPoint(x,y, color="black") {
+			let temp = document.createElement("p");
+			temp.className = "bigPoint";
+			temp.style.left = origin[0]+x*domainScale-3+"px";
+			temp.style.top = origin[1]-y*rangeScale-3+"px";
+			temp.style.backgroundColor = color;
+			document.body.appendChild(temp);}
+
+		function arrow(x1, y1, x2, y2, color="white") {
+			let dx = x2-x1;
+			let dy = y2-y1;
+			let degree = Math.atan2(dy, dx/spatialRatio);
+			let magnitude = Math.sqrt((dx)**2+(dy)**2);
+			let newMag = magnitude*(rangeShift*domainShift)/Math.sqrt((rangeShift*Math.cos(degree))**2+(domainShift*Math.sin(degree))**2);
+			let tmp = document.createElement("p");
+			//tmp.textContent = "→";
+			tmp.className = "arrow";
+			tmp.style.backgroundColor = color;
+			tmp.style.position = "absolute";
+			tmp.style.left = origin[0]+x1*domainScale+"px";
+			tmp.style.top = origin[1]-y1*rangeScale+"px";
+			tmp.style.transform = `rotate(${-1*degree}rad) scaleX(${newMag})`;
+			document.body.appendChild(tmp);}
+
+
+		line(false, 0, range[1], range[0], 2);
+		line(true, 0, domain[0], domain[1], 2);
+
+		for (let i = domain[0]; i<=domain[1]; i+=domainAxes) {line(false, i, range[1], range[0], 1);}
+		for (let i = range[0]; i<=range[1]; i+=rangeAxes) {line(true, i, domain[0], domain[1], 1);}
+
+		function getCoords(event) {
+			graphRec((event.pageX-origin[0])/domainScale, -(event.pageY-origin[1]-17)/rangeScale);
+		}
+
+		let isMouseDown = false;
+		document.addEventListener('mousedown', () => {isMouseDown = true;});
+		document.addEventListener('mouseup', () => {isMouseDown = false;});
+
+		let mouseX = 0;
+		let mouseY = 0;
+
+		canvas.addEventListener('mousemove', function() {
+			mouseX = (event.pageX-origin[0])/domainScale;
+			mouseY = -(event.pageY-origin[1]-17)/rangeScale;
+
+			if (!isMouseDown) {
+ 				let remove = document.getElementsByClassName('arrow');
+				while(remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+				remove = document.getElementsByClassName('bigPoint');
+				while(remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+			}
+
+			if (true) {getCoords(event);}
+		});
+
+
+		function matrixMultiply(vector, graphEigenvector = false) {
+			let MATRIX = [
+				[Number(document.getElementById("topleft").value),
+				 Number(document.getElementById("topright").value)], 
+				[Number(document.getElementById("bottomleft").value), 
+				 Number(document.getElementById("bottomright").value)]
+			]
+
+			let a = MATRIX[0][0]
+			let b = MATRIX[0][1]
+			let c = MATRIX[1][0]
+			let d = MATRIX[1][1]
+
+
+			if ((a+d)**2-4*(a*d-b*c)>=0 && graphEigenvector) {
+				ev1el.textContent = "Eigenvalue 1 = "+( (a+d) + Math.sqrt( (a+d)**2 - 4*(a*d-b*c) ) )/2;
+				ev2el.textContent = "Eigenvalue 2 = "+( (a+d) - Math.sqrt( (a+d)**2 - 4*(a*d-b*c) ) )/2;
+			}
+			else if ((a+d)**2-4*(a*d-b*c)<0) {
+				ev1el.textContent = "Eigenvalue 1 = "+( (a+d)/2 ) + " + " + Math.sqrt( 4*(a*d-b*c) - (a+d)**2 )/2 + "i";
+				ev2el.textContent = "Eigenvalue 2 = "+( (a+d)/2 ) + " + " + Math.sqrt( 4*(a*d-b*c) - (a+d)**2 )/2 + "i";
+			}
+
+			if (graphEigenvector) {
+				areael.textContent = "Quadrilateral Area = "+4*(a*d-b*c);
+			}
+
+
+			if ((a+d)**2-4*(a*d-b*c)>=0 && graphEigenvector && state==0) {
+				let ev1 = ( (a+d) + Math.sqrt( (a+d)**2 - 4*(a*d-b*c) ) )/2
+				let ev2 = ( (a+d) - Math.sqrt( (a+d)**2 - 4*(a*d-b*c) ) )/2
+
+				//A-λI
+				let i = a - ev1;
+				let j = b;
+				let k = c;
+				let l = d - ev1;
+
+				let x = 1;
+				let y = -i/j;
+
+				arrow(-10,-10*y, 10,10*y);
+
+
+				//A-λI
+				i = a - ev2;
+				j = b;
+				k = c;
+				l = d - ev2;
+
+				x = 1;
+				y = -i/j;
+
+				arrow(-10,-10*y, 10,10*y);
+
+			}
+
+			if (state == 1 && graphEigenvector) {
+				bigPoint(MATRIX[0][0]+MATRIX[0][1], MATRIX[1][0]+MATRIX[1][1], "white")
+				bigPoint(MATRIX[0][0]-MATRIX[0][1], MATRIX[1][0]-MATRIX[1][1], "white")
+				bigPoint(-MATRIX[0][0]+MATRIX[0][1], -MATRIX[1][0]+MATRIX[1][1], "white")
+				bigPoint(-MATRIX[0][0]-MATRIX[0][1], -MATRIX[1][0]-MATRIX[1][1], "white")
+
+				arrow(MATRIX[0][0]+MATRIX[0][1], MATRIX[1][0]+MATRIX[1][1], MATRIX[0][0]-MATRIX[0][1], MATRIX[1][0]-MATRIX[1][1])
+				arrow(MATRIX[0][0]+MATRIX[0][1], MATRIX[1][0]+MATRIX[1][1], -MATRIX[0][0]+MATRIX[0][1], -MATRIX[1][0]+MATRIX[1][1])
+				arrow(-MATRIX[0][0]+MATRIX[0][1], -MATRIX[1][0]+MATRIX[1][1], -MATRIX[0][0]-MATRIX[0][1], -MATRIX[1][0]-MATRIX[1][1])
+				arrow(-MATRIX[0][0]-MATRIX[0][1], -MATRIX[1][0]-MATRIX[1][1], MATRIX[0][0]-MATRIX[0][1], MATRIX[1][0]-MATRIX[1][1])
+			}
+
+			return [
+				vector[0]*MATRIX[0][0]+vector[1]*MATRIX[0][1],
+				vector[0]*MATRIX[1][0]+vector[1]*MATRIX[1][1]
+			];
+		}
+
+		function dist(m,n=[0,0]) {return Math.sqrt((m[0]-n[0])**2+(m[1]-n[1])**2);}
+
+		function graphRec(x, y) {
+			let coords = [x, y];
+			let iter = 0;
+
+			let remove = document.getElementsByClassName('arrow');
+			while (remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+			remove = document.getElementsByClassName('bigPoint');
+			while(remove[0]) {remove[0].parentNode.removeChild(remove[0]);}
+
+			matrixMultiply([0,0], true)
+
+			bigPoint(...coords, "white");
+			while (dist(coords)<20 && dist(coords,matrixMultiply(coords))>0.01) {
+				let tmpColor = dist(coords,matrixMultiply(coords))*10
+				arrow(...coords, ...matrixMultiply(coords));
+				bigPoint(...coords, "white")
+				coords = matrixMultiply(coords);
+			}
+		}
+
+
+
+	</script>
+</body>
+</html>
