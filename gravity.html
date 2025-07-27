@@ -246,11 +246,11 @@
 		for (let i = 0; i<particleCount; i++) {
 			let subj = particles[i];
 			
-			subj.velocity[0] += subj.acceleration[0]*timeScale/fps;
-			subj.velocity[1] += subj.acceleration[1]*timeScale/fps;
-			
 			subj.pos[0] += subj.velocity[0]*timeScale/fps;
 			subj.pos[1] += subj.velocity[1]*timeScale/fps;
+	
+			subj.velocity[0] += subj.acceleration[0]*timeScale/fps;
+			subj.velocity[1] += subj.acceleration[1]*timeScale/fps;
 
 			particleElements[i].style.top = 600-particles[i].pos[1]-25+"px";
 			particleElements[i].style.left = particles[i].pos[0]-9+"px";
