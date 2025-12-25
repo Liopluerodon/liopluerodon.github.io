@@ -6,6 +6,15 @@
 	<title>Gravisim Issues</title>
 	<style type="text/css">
 		body{background-color:black;}
+		#stats{
+			position: absolute;
+			background-color: rgb(30, 30, 40);
+			border: 2px solid rgb(255,255,255);
+			border-radius: 10px;
+			left: 8px;
+			padding: 15px 15px 15px 15px;
+
+		}
 		.particle{
 			border-radius: 100%;
 			width: 20px;
@@ -37,19 +46,23 @@
 	</style>
 </head>
 <body>
-	<text id="conclusion">So it seems that gravity cannot be simulated with 100% accuracy using this method</text><br>
-	<text id="conclusion">Indeed, the graph of position of this ball should produce something like a sine wave with semicircles, whose derivative and 2nd derivative (v and a) have asymptotes</text><br>
-	<text id="conclusion">Dulling these asymptotes using band-aids like softeners increases innaccuracy</text><br>
-	<text id="conclusion">On the corresponding kinetic energy graph, the effect can be seen with curved spikes (softeners) and straight lines capping the spikes (no accel), while a real kinetic energy graph would have asymptotes</text><br>
-	<text id="conclusion">If the mathematically optimal / physically accurate trajectory was followed, the motion would be perfectly cyclical, but alas it's impossible to trully make it cyclical without neutering accuracy</text><br>
-	<text id="conclusion">As for collisions in the simulation causing total momentum to change (something that shouldn't occur with perfectly elastic collisions), this is because whenever two particles collide, their acceleration is set to 0 by the program</text><br>
-	<text id="conclusion">This is because otherwise, acceleration can overpower the post-collision velocity (the accel switches the sign of the post-collision velocity, keeping the particle moving in the same direction towards each other), causing colliding particles to sorta stick together before shooting apart. </text><br>
+	<div id="stats">
+		<text id="conclusion">
+			Gravity can't be perfectly simulated using numerical methods like Euler's Method.<br>
+			Optimally, in a situation like this, the position graph should be periodic and cyclical, always touching the two lines. And the tangent when the two particles meet should be vertical. <br>
+			However, this fails because the particle gains velocity falling into the center, and thus spends less frames moving away from the center and thus experiences less total velocity. <br>
+			This isn't an issue in physics because the universe's framerate is functionally infinite, so the accelerations get added up properly anyway. Not feasible in this simulation. <br>
+			The two easiest options to implement are to add a softener to the gravity formula to remove asymptotes (option 2) or remove gravity at low distances (option 3). <br>
+			I decided to use option 3, with a minimum distance of 40, for the simulation <br>
+		</text>
+	</div>
 	<p class="particle" id="anchor"></p>
 	<p class="particle" id="subject"></p>
+
 	<script type="text/javascript">
 		let bod = {
-			pos: Number(prompt("Starting position of ball")),
-			v: Number(prompt("Starting velocity of ball")),
+			pos: 100,
+			v: 0,
 			a: 0
 		}
 		let formula = Number(prompt("Select your formula: 1-Accurate, 2-Softener, 3-No Accel"));
@@ -66,13 +79,24 @@
 		let iter = 0;
 
 		function graph(x, y, left, height, color = "white") {
-		let pixels = [];
-		pixels[x] = document.createElement("p");
-		pixels[x].style.backgroundColor = color;
-		pixels[x].className = "pixels"
-		pixels[x].style.top = height-y+"px";
-		pixels[x].style.left = x+left+"px";
-		document.body.appendChild(pixels[x]);}
+		let tmp = document.createElement("p");
+		tmp.style.backgroundColor = color;
+		tmp.className = "pixels"
+		tmp.style.top = height-y+"px";
+		tmp.style.left = x+left+"px";
+		document.body.appendChild(tmp);}
+
+		function line(length, y, left, height, color = "white") {
+		let tmp = document.createElement("p");
+		tmp.style.backgroundColor = color;
+		tmp.className = "pixels"
+		tmp.style.top = height-y+"px";
+		tmp.style.left = left+"px";
+		tmp.style.width = length+"px"
+		document.body.appendChild(tmp);}
+
+		line(screen.width, 100, 0, 500)
+		line(screen.width, -100, 0, 500)
 
 
 		function running() {
